@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SiancasGo | Viajes, Disponibilidad y Rutas en General Güemes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+  <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">SiancasGo 🌍</h1>
+        <p class="text-xs text-emerald-200">Güemes · Campo Santo · Cobos · El Sauce · Betania · Corredor Madre Vieja</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="abrirModalMisReservas()" class="bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 px-3 py-1.5 rounded-lg text-xs font-semibold">
+          📅 Mis Reservas y Chats Guardados
+        </button>
+        <span id="userNameDisplay" class="text-xs bg-emerald-950 px-3 py-1.5 rounded-lg hidden sm:inline"></span>
+        <button onclick="toggleAuthModal()" id="btnLogin" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          Iniciar Sesión
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Configurador de Viaje con Fechas Desde/Hasta y Horario -->
+    <section class="lg:col-span-5 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+      <div>
+        <h2 class="text-lg font-bold text-emerald-950">Armá tu Viaje con Disponibilidad por Calendario</h2>
+        <p class="text-xs text-slate-500">Validamos qué días abre cada prestador, cupos libres por turno y traslado si venís sin vehículo.</p>
+      </div>
+
+      <form id="planForm" onsubmit="generarPlanConCalendario(event)" class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="font-semibold block mb-1 text-xs">¿Desde dónde venís?</label>
+            <input type="text" id="origen" value="Cafayate" required class="w-full border rounded-lg px-3 py-2">
+          </div>
+          <div>
+            <label class="font-semibold block mb-1 text-xs">¿Tenés movilidad?</label>
+            <select id="movilidad" class="w-full border rounded-lg px-3 py-2 bg-white">
+              <option value="no">No, necesito traslado</option>
+              <option value="auto">Sí, vehículo propio</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Selector Fecha Desde / Hasta y Hora Preferida -->
+        <div class="grid grid-cols-3 gap-2 bg-emerald-50/70 p-3 rounded-xl border border-emerald-200">
+          <div>
+            <label class="font-bold text-emerald-950 block mb-1 text-xs">Fecha Desde</label>
+            <input type="date" id="fechaDesde" value="2026-11-16" required class="w-full border rounded-lg px-2 py-1.5 text-xs bg-white">
+          </div>
+          <div>
+            <label class="font-bold text-emerald-950 block mb-1 text-xs">Fecha Hasta</label>
+            <input type="date" id="fechaHasta" value="2026-11-17" required class="w-full border rounded-lg px-2 py-1.5 text-xs bg-white">
+          </div>
+          <div>
+            <label class="font-bold text-emerald-950 block mb-1 text-xs">Hora Preferida</label>
+            <select id="horaPreferida" class="w-full border rounded-lg px-2 py-1.5 text-xs bg-white">
+              <option value="09:00">09:00 hs</option>
+              <option value="11:00" selected>11:00 hs</option>
+              <option value="14:00">14:00 hs</option>
+              <option value="16:00">16:00 hs</option>
+              <option value="20:00">20:00 hs</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="font-semibold block mb-1 text-xs">Compañía</label>
+            <select id="compania" class="w-full border rounded-lg px-2.5 py-2 bg-white text-xs">
+              <option value="Pareja">En pareja</option>
+              <option value="Familia">En familia</option>
+              <option value="Amigos">Amigos</option>
+              <option value="Solo">Solo</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-semibold block mb-1 text-xs">Integrantes</label>
+            <input type="number" id="personas" min="1" max="20" value="2" required class="w-full border rounded-lg px-2.5 py-2 text-xs">
+          </div>
+          <div>
+            <label class="font-semibold block mb-1 text-xs">Presupuesto ($)</label>
+            <input type="number" id="presupuesto" step="5000" value="95000" required class="w-full border rounded-lg px-2.5 py-2 text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="font-semibold block mb-1 text-xs">Experiencias que querés combinar</label>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-lg"><input type="checkbox" value="Historia y Cultura" checked class="interes"> Historia (Cobos / Campo Santo)</label>
+            <label class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-lg"><input type="checkbox" value="Termas y Relax" checked class="interes"> Termas (El Sauce)</label>
+            <label class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-lg"><input type="checkbox" value="Gastronomía Regional" checked class="interes"> Gastronomía Criolla</label>
+            <label class="flex items-center gap-1.5 bg-slate-100 p-2 rounded-lg"><input type="checkbox" value="Rural y Naturaleza" checked class="interes"> Rural (Betania / Madre Vieja)</label>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl shadow transition">
+          ✨ Verificar Disponibilidad y Armar Mapa con Pines
+        </button>
+      </form>
+    </section>
+
+    <!-- Mapa con Pines de la Ruta + Desglose de Turnos + Chat -->
+    <section class="lg:col-span-7 space-y-4">
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="flex flex-wrap justify-between items-center border-b pb-3 mb-3 gap-2">
+          <div>
+            <h3 class="font-bold text-emerald-950 text-base">Hoja de Ruta con Pines en Google Maps y Turnos</h3>
+            <p id="resumenViaje" class="text-xs text-slate-500">Cada pin numerado muestra la ubicación exacta cargada por el prestador.</p>
+          </div>
+          <span id="badgeCosto" class="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1.5 rounded-full">$0 ARS</span>
+        </div>
+
+        <!-- Avisos de Movilidad y de Turnos Ocupados / Reasignados -->
+        <div id="alertaMovilidad" class="hidden bg-amber-50 border border-amber-300 text-amber-900 text-xs p-3 rounded-xl mb-2"></div>
+        <div id="alertaCalendario" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs p-3 rounded-xl mb-3 space-y-1"></div>
+
+        <!-- Mapa Google Maps Incrustado con Pines Numerados de la Ruta -->
+        <div class="relative rounded-xl overflow-hidden border border-slate-300 h-80 mb-4 z-10">
+          <div id="mapaRuta" class="w-full h-full"></div>
+        </div>
+
+        <!-- Paradas del Itinerario con Botón de Pin y Chat Interno -->
+        <div id="listaActividades" class="space-y-2.5 mb-4 text-sm"></div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a id="btnGoogleMapsRuta" href="https://www.google.com/maps/dir/-24.6672,-65.0485/-24.7431,-65.1258/-24.6335,-65.1382" target="_blank"
+             class="flex-1 text-center bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2.5 rounded-xl text-xs sm:text-sm transition">
+            🗺️ Abrir Ruta Completa en Google Maps GPS
+          </a>
+          <button onclick="confirmarYGuardarPlan()" id="btnConfirmarWA" disabled
+                  class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm transition">
+            📲 Registrar Reservas y Confirmar por WhatsApp
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Chat Interno con Memoria -->
+  <div id="chatModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-[480px]">
+      <div class="bg-emerald-900 text-white px-4 py-3 flex justify-between items-center">
+        <div>
+          <h4 id="chatTituloNegocio" class="font-bold text-sm">Chat con Prestador</h4>
+          <p id="chatSubtitulo" class="text-[11px] text-emerald-200">Conversación guardada con memoria persistente</p>
+        </div>
+        <button onclick="cerrarChat()" class="text-white/80 hover:text-white text-lg font-bold">✕</button>
+      </div>
+      <div id="chatMensajesBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 bg-slate-50 text-xs"></div>
+      <form onsubmit="enviarMensajeCliente(event)" class="p-3 bg-white border-t flex gap-2">
+        <input type="text" id="chatInputTexto" required placeholder="Escribí tu mensaje al prestador..." class="flex-1 border rounded-xl px-3 py-2 text-xs">
+        <button type="submit" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2 rounded-xl text-xs">Enviar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Mis Reservas y Conversaciones -->
+  <div id="reservasModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-2xl max-h-[85vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-3 mb-3">
+        <h3 class="font-bold text-emerald-950 text-base">📅 Mis Reservas y Chats con Prestadores</h3>
+        <button onclick="cerrarModalMisReservas()" class="text-slate-500 font-bold">✕</button>
+      </div>
+      <div id="listaMisReservas" class="overflow-y-auto space-y-2.5 text-xs flex-1"></div>
+    </div>
+  </div>
+
+  <!-- Modal Login -->
+  <div id="authModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl">
+      <h3 class="text-base font-bold text-slate-800 mb-3">Acceso Viajero</h3>
+      <form onsubmit="autenticarCliente(event)" class="space-y-3 text-xs">
+        <input type="text" id="authNombre" value="Martín Ríos" placeholder="Nombre completo" required class="w-full border rounded-lg px-3 py-2">
+        <input type="email" id="authEmail" value="martin.rios@gmail.com" placeholder="Correo electrónico" required class="w-full border rounded-lg px-3 py-2">
+        <input type="tel" id="authTel" value="5493868400123" placeholder="WhatsApp" required class="w-full border rounded-lg px-3 py-2">
+        <input type="password" id="authPass" value="cliente123" placeholder="Contraseña" required class="w-full border rounded-lg px-3 py-2">
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="toggleAuthModal()" class="flex-1 bg-slate-200 py-2 rounded-lg font-semibold">Cancelar</button>
+          <button type="submit" class="flex-1 bg-emerald-700 text-white py-2 rounded-lg font-bold">Ingresar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1I_SAppFOUDQid_BGGdIVSJspmXrcG_6fHUWcwt2FuhDkeA89ONymPL4LL5x3bhmZ/exec";
+
+async function llamarBackend(payload) {
+  // Usamos text/plain para que el navegador no dispare un OPTIONS preflight bloqueado por Google
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+    const ADMIN_WA = "5493875622260";
+    const DIAS_SEMANA = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+
+    let CATALOGO = [
+      { ID: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", Rubro: "Movilidad y Traslados", Localidad: "General Güemes", CostoPromedio: 6500, AptoCompania: "Todos", Latitud: -24.6672, Longitud: -65.0485, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,09:00,11:00,14:00,16:00,18:00", CupoMaximoTurno: 15, WhatsApp: "5493875445566" },
+      { ID: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", Rubro: "Historia y Cultura", Localidad: "Cobos", CostoPromedio: 4500, AptoCompania: "Familia, Pareja, Amigos", Latitud: -24.7431, Longitud: -65.1258, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 8, WhatsApp: "5493875112234" },
+      { ID: "PRE-005", NombreNegocio: "Museo e Historia del Azúcar e Ingenio San Isidro", Rubro: "Historia y Cultura", Localidad: "Campo Santo", CostoPromedio: 3500, AptoCompania: "Todos", Latitud: -24.6975, Longitud: -65.0910, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 15, WhatsApp: "5493875112235" },
+      { ID: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", Rubro: "Termas y Relax", Localidad: "El Sauce", CostoPromedio: 6000, AptoCompania: "Pareja, Familia, Amigos, Solo", Latitud: -24.6335, Longitud: -65.1382, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00,16:00", CupoMaximoTurno: 20, WhatsApp: "5493875112233" },
+      { ID: "PRE-007", NombreNegocio: "Estancia Rural Río Mojotoro y Monte", Rubro: "Rural y Naturaleza", Localidad: "Betania", CostoPromedio: 8500, AptoCompania: "Familia, Pareja, Amigos", Latitud: -24.6710, Longitud: -65.1180, DiasAtencion: "Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00", CupoMaximoTurno: 10, WhatsApp: "5493875112237" },
+      { ID: "PRE-006", NombreNegocio: "Peña y Parrilla El Guardamonte", Rubro: "Gastronomía Regional", Localidad: "General Güemes", CostoPromedio: 12000, AptoCompania: "Pareja, Familia, Amigos", Latitud: -24.6645, Longitud: -65.0460, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "12:00,13:00,20:00,21:30", CupoMaximoTurno: 30, WhatsApp: "5493875112236" }
+    ];
+
+    const RESERVAS_INICIALES = [
+      { IDReserva: "RES-001", IDPlan: "PLN-001", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", IDCliente: "USR-002", NombreCliente: "Martín Ríos", FechaServicio: "2026-11-14", HoraTurno: "09:00", CantidadPersonas: 2, Subtotal: 13000, EstadoReserva: "Confirmada" },
+      { IDReserva: "RES-002", IDPlan: "PLN-001", IDPrestador: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", IDCliente: "USR-002", NombreCliente: "Martín Ríos", FechaServicio: "2026-11-14", HoraTurno: "11:00", CantidadPersonas: 2, Subtotal: 9000, EstadoReserva: "Pendiente" },
+      { IDReserva: "RES-003", IDPlan: "PLN-001", IDPrestador: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", IDCliente: "USR-002", NombreCliente: "Martín Ríos", FechaServicio: "2026-11-14", HoraTurno: "16:00", CantidadPersonas: 2, Subtotal: 12000, EstadoReserva: "Confirmada" },
+      { IDReserva: "RES-004", IDPlan: "PLN-000", IDPrestador: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", IDCliente: "USR-099", NombreCliente: "Contingente Escolar", FechaServicio: "2026-11-16", HoraTurno: "11:00", CantidadPersonas: 8, Subtotal: 36000, EstadoReserva: "Confirmada" }
+    ];
+
+    const MENSAJES_INICIALES = [
+      { IDMensaje: "MSG-001", IDReserva: "RES-001", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", EmisorRol: "cliente", TextoMensaje: "Hola Carlos! Nuestro colectivo desde Cafayate llega 08:50 a la terminal de Güemes, ¿nos esperan ahí?", FechaHora: "2026-11-12 10:15" },
+      { IDMensaje: "MSG-002", IDReserva: "RES-001", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", EmisorRol: "prestador", TextoMensaje: "¡Hola Martín! Sí, quédate tranquilo que la combi blanca va a estar estacionada en dársena 2 esperándolos.", FechaHora: "2026-11-12 10:18" },
+      { IDMensaje: "MSG-003", IDReserva: "RES-003", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", EmisorRol: "cliente", TextoMensaje: "Hola Lucía! ¿Para el turno de las 16:00 en las termas incluyen batas o llevamos toallones?", FechaHora: "2026-11-12 11:05" },
+      { IDMensaje: "MSG-004", IDReserva: "RES-003", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", EmisorRol: "prestador", TextoMensaje: "¡Hola Martín! Tenemos alquiler de batas acá en El Sauce, pero pueden traer sus toallones sin problema.", FechaHora: "2026-11-12 11:12" }
+    ];
+
+    if (!localStorage.getItem("siancas_reservas")) {
+      localStorage.setItem("siancas_reservas", JSON.stringify(RESERVAS_INICIALES));
+    }
+    if (!localStorage.getItem("siancas_chat_history")) {
+      localStorage.setItem("siancas_chat_history", JSON.stringify(MENSAJES_INICIALES));
+    }
+    if (!localStorage.getItem("siancas_user")) {
+      localStorage.setItem("siancas_user", JSON.stringify({ id: "USR-002", nombre: "Martín Ríos", email: "martin.rios@gmail.com", tel: "5493868400123", rol: "cliente" }));
+    }
+
+    let map = null;
+    let routeLayerGroup = null;
+    let planActual = null;
+    let chatContext = null;
+
+    function initMapa() {
+      map = L.map("mapaRuta").setView([-24.685, -65.095], 11);
+      const googleStreets = L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        attribution: "Google Maps"
+      });
+      const googleHybrid = L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        attribution: "Google Satellite"
+      });
+      googleStreets.addTo(map);
+      L.control.layers({ "Google Maps Calles": googleStreets, "Google Satélite Híbrido": googleHybrid }).addTo(map);
+      routeLayerGroup = L.layerGroup().addTo(map);
+    }
+
+    function obtenerFechasRango(desde, hasta) {
+      const arr = [];
+      let cur = new Date(desde + "T12:00:00");
+      const end = new Date((hasta || desde) + "T12:00:00");
+      while (cur <= end && arr.length < 14) {
+        arr.push(cur.toISOString().slice(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
+      return arr.length ? arr : [desde];
+    }
+
+    function evaluarDisponibilidadLocal(prestador, fechas, horaPref, personas) {
+      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
+      const diasHabiles = prestador.DiasAtencion.split(",").map(d => d.trim());
+      const turnos = prestador.HorariosTurnos.split(",").map(h => h.trim().slice(0, 5));
+      const cupoMax = Number(prestador.CupoMaximoTurno);
+
+      const candidatos = [horaPref, ...turnos.filter(t => t !== horaPref)].filter(t => turnos.includes(t));
+      const listaTurnos = candidatos.length > 0 ? candidatos : turnos;
+      const alertas = [];
+
+      for (let f = 0; f < fechas.length; f++) {
+        const fechaStr = fechas[f];
+        const dObj = new Date(fechaStr + "T12:00:00");
+        const diaNombre = DIAS_SEMANA[dObj.getDay()];
+
+        if (!diasHabiles.includes(diaNombre)) {
+          alertas.push(`📅 <strong>${prestador.NombreNegocio}</strong> permanece cerrado los días <strong>${diaNombre}</strong> (${fechaStr}).`);
+          continue;
+        }
+
+        for (let t = 0; t < listaTurnos.length; t++) {
+          const hora = listaTurnos[t];
+          const ocupados = reservas
+            .filter(r => r.IDPrestador === prestador.ID && r.FechaServicio === fechaStr && r.HoraTurno.slice(0, 5) === hora && r.EstadoReserva !== "Cancelada")
+            .reduce((acc, r) => acc + Number(r.CantidadPersonas), 0);
+
+          if (ocupados + personas <= cupoMax) {
+            const reasignado = (hora !== horaPref || f > 0);
+            if (reasignado) {
+              alertas.push(`🔄 <strong>${prestador.NombreNegocio}:</strong> asignado al <strong>${diaNombre} ${fechaStr} a las ${hora} hs</strong> (${cupoMax - ocupados} lugares disponibles).`);
+            }
+            return {
+              disponible: true,
+              fecha: fechaStr,
+              diaSemana: diaNombre,
+              hora: hora,
+              cupoRestante: cupoMax - (ocupados + personas),
+              alertas: alertas
+            };
+          } else {
+            alertas.push(`⚠️ <strong>${prestador.NombreNegocio}:</strong> el turno del ${diaNombre} ${fechaStr} a las <strong>${hora} hs está COMPLETO</strong> (${ocupados}/${cupoMax} lugares).`);
+          }
+        }
+      }
+      return { disponible: false, alertas: alertas };
+    }
+
+    function generarPlanConCalendario(e) {
+      if (e) e.preventDefault();
+      const origen = document.getElementById("origen").value;
+      const movilidad = document.getElementById("movilidad").value;
+      const fechaDesde = document.getElementById("fechaDesde").value;
+      const fechaHasta = document.getElementById("fechaHasta").value;
+      const horaPreferida = document.getElementById("horaPreferida").value;
+      const compania = document.getElementById("compania").value;
+      const personas = parseInt(document.getElementById("personas").value, 10);
+      const presupuesto = parseFloat(document.getElementById("presupuesto").value);
+      const intereses = Array.from(document.querySelectorAll(".interes:checked")).map(i => i.value);
+
+      const fechas = obtenerFechasRango(fechaDesde, fechaHasta);
+      let costoAcumulado = 0;
+      const items = [];
+      let avisosCalendario = [];
+
+      const alertaMov = document.getElementById("alertaMovilidad");
+      if (movilidad === "no") {
+        const trans = CATALOGO.find(x => x.Rubro === "Movilidad y Traslados");
+        const disp = evaluarDisponibilidadLocal(trans, fechas, "09:00", personas);
+        if (disp.disponible) {
+          const sub = trans.CostoPromedio * personas;
+          costoAcumulado += sub;
+          items.push({ ...trans, fecha: disp.fecha, diaSemana: disp.diaSemana, hora: disp.hora, cupoRestante: disp.cupoRestante, subtotal: sub });
+          alertaMov.classList.remove("hidden");
+          alertaMov.innerHTML = `🚐 <strong>Movilidad incluida:</strong> Para tu llegada desde <strong>${origen}</strong> sin vehículo, reservamos <strong>${trans.NombreNegocio}</strong> el ${disp.diaSemana} ${disp.fecha} (${disp.hora} hs) por $${sub.toLocaleString("es-AR")}.`;
+        }
+      } else {
+        alertaMov.classList.add("hidden");
+      }
+
+      CATALOGO.filter(x => x.Rubro !== "Movilidad y Traslados" && intereses.includes(x.Rubro)).forEach(exp => {
+        const disp = evaluarDisponibilidadLocal(exp, fechas, horaPreferida, personas);
+        avisosCalendario = avisosCalendario.concat(disp.alertas);
+        if (disp.disponible) {
+          const sub = exp.CostoPromedio * personas;
+          if (costoAcumulado + sub <= presupuesto) {
+            costoAcumulado += sub;
+            items.push({ ...exp, fecha: disp.fecha, diaSemana: disp.diaSemana, hora: disp.hora, cupoRestante: disp.cupoRestante, subtotal: sub });
+          }
+        }
+      });
+
+      planActual = { origen, movilidad, fechaDesde, fechaHasta, horaPreferida, compania, personas, presupuesto, costoAcumulado, items, avisosCalendario };
+      renderizarPlanYMapa();
+    }
+
+    function renderizarPlanYMapa() {
+      document.getElementById("badgeCosto").textContent = `Total: $${planActual.costoAcumulado.toLocaleString("es-AR")} ARS`;
+      document.getElementById("resumenViaje").textContent =
+        `Fechas: ${planActual.fechaDesde} al ${planActual.fechaHasta} · ${planActual.personas} pers. (${planActual.compania})`;
+
+      const boxCal = document.getElementById("alertaCalendario");
+      if (planActual.avisosCalendario.length > 0) {
+        boxCal.classList.remove("hidden");
+        boxCal.innerHTML = `<div class="font-bold mb-1">🔔 Estado de Calendarios y Disponibilidad de Turnos:</div>` +
+          planActual.avisosCalendario.map(a => `<div>• ${a}</div>`).join("");
+      } else {
+        boxCal.classList.add("hidden");
+      }
+
+      const cont = document.getElementById("listaActividades");
+      cont.innerHTML = planActual.items.map((it, idx) => `
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="bg-emerald-800 text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center">${idx + 1}</span>
+              <span class="text-xs font-bold text-emerald-800">${it.Localidad} · ${it.diaSemana} ${it.fecha} (${it.hora} hs)</span>
+              <span class="text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Quedan ${it.cupoRestante} lugares</span>
+            </div>
+            <h4 class="font-bold text-slate-900 mt-1">${it.NombreNegocio}</h4>
+          </div>
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <span class="font-bold text-emerald-950 text-sm mr-2">$${it.subtotal.toLocaleString("es-AR")}</span>
+            <button onclick="centrarPin(${idx})" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 py-1.5 rounded-lg text-xs font-semibold">
+              📍 Ver Pin
+            </button>
+            <button onclick="abrirChatConPrestador('${it.ID}', '${it.NombreNegocio}', 'RES-PLAN-${idx + 1}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
+              💬 Chatear
+            </button>
+          </div>
+        </div>
+      `).join("");
+
+      routeLayerGroup.clearLayers();
+      const coordsRuta = [];
+
+      planActual.items.forEach((it, idx) => {
+        const latlng = [Number(it.Latitud), Number(it.Longitud)];
+        coordsRuta.push(latlng);
+
+        const iconoPin = L.divIcon({
+          className: "custom-pin",
+          html: `<div style="background:#065f46;color:white;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;border:3px solid #f59e0b;box-shadow:0 3px 8px rgba(0,0,0,0.4);">${idx + 1}</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const marker = L.marker(latlng, { icon: iconoPin }).addTo(routeLayerGroup);
+        marker.bindPopup(`
+          <div style="font-size:12px;min-width:185px;">
+            <strong>Parada ${idx + 1}: ${it.NombreNegocio}</strong><br>
+            📍 ${it.Localidad}<br>
+            🕒 Turno: <strong>${it.diaSemana} ${it.fecha} - ${it.hora} hs</strong><br>
+            💰 Subtotal: $${it.subtotal.toLocaleString("es-AR")}<br>
+            <button onclick="abrirChatConPrestador('${it.ID}', '${it.NombreNegocio}', 'RES-PLAN-${idx + 1}')"
+              style="margin-top:6px;background:#4f46e5;color:white;padding:4px 8px;border-radius:6px;width:100%;font-weight:bold;">
+              💬 Chatear con Prestador
+            </button>
+          </div>
+        `);
+      });
+
+      if (coordsRuta.length > 1) {
+        L.polyline(coordsRuta, { color: "#059669", weight: 4, dashArray: "8, 6" }).addTo(routeLayerGroup);
+        map.fitBounds(coordsRuta, { padding: [35, 35] });
+        document.getElementById("btnGoogleMapsRuta").href =
+          "https://www.google.com/maps/dir/" + coordsRuta.map(c => c[0] + "," + c[1]).join("/");
+      } else if (coordsRuta.length === 1) {
+        map.setView(coordsRuta[0], 14);
+      }
+
+      document.getElementById("btnConfirmarWA").disabled = planActual.items.length === 0;
+    }
+
+    function centrarPin(idx) {
+      const it = planActual.items[idx];
+      if (!it) return;
+      map.setView([Number(it.Latitud), Number(it.Longitud)], 15);
+    }
+
+    async function confirmarYGuardarPlan() {
+      const user = JSON.parse(localStorage.getItem("siancas_user") || "null");
+      if (!user) {
+        toggleAuthModal();
+        return;
+      }
+
+      const reservasGuardadas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
+      planActual.items.forEach(it => {
+        reservasGuardadas.push({
+          IDReserva: "RES-" + String(reservasGuardadas.length + 1).padStart(3, "0"),
+          IDPlan: "PLN-WEB",
+          IDPrestador: it.ID,
+          NombreNegocio: it.NombreNegocio,
+          IDCliente: user.id || "USR-002",
+          NombreCliente: user.nombre,
+          TelefonoCliente: user.tel,
+          FechaServicio: it.fecha,
+          HoraTurno: it.hora,
+          CantidadPersonas: planActual.personas,
+          Subtotal: it.subtotal,
+          EstadoReserva: "Pendiente"
+        });
+      });
+      localStorage.setItem("siancas_reservas", JSON.stringify(reservasGuardadas));
+
+      try {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "confirmarReservasPlan",
+            idCliente: user.id,
+            nombreCliente: user.nombre,
+            telefonoCliente: user.tel,
+            ...planActual
+          })
+        });
+      } catch (e) {}
+
+      const detalle = planActual.items.map((i, idx) =>
+        `${idx + 1}. *${i.NombreNegocio}* (${i.Localidad}) - ${i.diaSemana} ${i.fecha} ${i.hora} hs ($${i.subtotal})`
+      ).join("%0A");
+
+      const msg = `Hola! Soy *${user.nombre}* y confirmo mi plan en *SiancasGo*:%0A` +
+                  `📅 Fechas: ${planActual.fechaDesde} al ${planActual.fechaHasta}%0A` +
+                  `📍 Origen: ${planActual.origen} (${planActual.movilidad === "no" ? "Con traslado incluido" : "Vehículo propio"})%0A` +
+                  `👥 Grupo: ${planActual.personas} personas (${planActual.compania})%0A` +
+                  `💰 Total: $${planActual.costoAcumulado}%0A%0A*Turnos Reservados:*%0A${detalle}`;
+      window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, "_blank");
+    }
+
+    function abrirChatConPrestador(idPrestador, nombreNegocio, idReserva) {
+      const user = JSON.parse(localStorage.getItem("siancas_user") || "null");
+      chatContext = {
+        idPrestador,
+        nombreNegocio,
+        idReserva: idReserva || "RES-001",
+        idCliente: user ? user.id : "USR-002",
+        nombreCliente: user ? user.nombre : "Martín Ríos"
+      };
+      document.getElementById("chatTituloNegocio").textContent = "💬 " + nombreNegocio;
+      document.getElementById("chatSubtitulo").textContent = `Historial guardado con ${nombreNegocio}`;
+      document.getElementById("chatModal").classList.remove("hidden");
+      document.getElementById("chatModal").classList.add("flex");
+      renderizarMensajesChat();
+    }
+
+    function cerrarChat() {
+      document.getElementById("chatModal").classList.add("hidden");
+      document.getElementById("chatModal").classList.remove("flex");
+    }
+
+    function renderizarMensajesChat() {
+      if (!chatContext) return;
+      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
+      const conv = historial.filter(m =>
+        m.IDPrestador === chatContext.idPrestador && m.IDCliente === chatContext.idCliente
+      );
+
+      const box = document.getElementById("chatMensajesBox");
+      if (conv.length === 0) {
+        box.innerHTML = `<p class="text-slate-400 text-center my-8">Escribile a <strong>${chatContext.nombreNegocio}</strong>. La conversación queda guardada en tu cuenta.</p>`;
+        return;
+      }
+
+      box.innerHTML = conv.map(m => {
+        const esMio = m.EmisorRol === "cliente";
+        return `
+          <div class="flex ${esMio ? 'justify-end' : 'justify-start'}">
+            <div class="max-w-[80%] rounded-2xl px-3.5 py-2 ${esMio ? 'bg-emerald-700 text-white' : 'bg-white border border-slate-200 text-slate-800'}">
+              <div class="text-[10px] opacity-75 font-semibold mb-0.5">${esMio ? 'Vos' : m.NombreNegocio} · ${m.FechaHora}</div>
+              <div>${m.TextoMensaje}</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function enviarMensajeCliente(e) {
+      e.preventDefault();
+      const input = document.getElementById("chatInputTexto");
+      const texto = input.value.trim();
+      if (!texto || !chatContext) return;
+
+      const ahora = new Date().toISOString().slice(0, 16).replace("T", " ");
+      const nuevoMsg = {
+        IDMensaje: "MSG-" + Date.now().toString().slice(-4),
+        IDReserva: chatContext.idReserva,
+        IDCliente: chatContext.idCliente,
+        NombreCliente: chatContext.nombreCliente,
+        IDPrestador: chatContext.idPrestador,
+        NombreNegocio: chatContext.nombreNegocio,
+        EmisorRol: "cliente",
+        TextoMensaje: texto,
+        FechaHora: ahora
+      };
+
+      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
+      historial.push(nuevoMsg);
+      localStorage.setItem("siancas_chat_history", JSON.stringify(historial));
+      input.value = "";
+      renderizarMensajesChat();
+
+      try {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "enviarMensaje",
+            idReserva: nuevoMsg.IDReserva,
+            idCliente: nuevoMsg.IDCliente,
+            nombreCliente: nuevoMsg.NombreCliente,
+            idPrestador: nuevoMsg.IDPrestador,
+            nombreNegocio: nuevoMsg.NombreNegocio,
+            emisorRol: "cliente",
+            textoMensaje: texto
+          })
+        });
+      } catch (err) {}
+    }
+
+    function abrirModalMisReservas() {
+      const user = JSON.parse(localStorage.getItem("siancas_user") || "null");
+      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]")
+        .filter(r => !user || r.IDCliente === user.id || r.NombreCliente === user.nombre);
+
+      const cont = document.getElementById("listaMisReservas");
+      cont.innerHTML = reservas.map(r => `
+        <div class="p-3 rounded-xl bg-slate-50 border flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded ${r.EstadoReserva === 'Confirmada' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.EstadoReserva}</span>
+            <span class="text-xs font-semibold text-slate-500 ml-1">${r.IDReserva} · 📅 ${r.FechaServicio} a las ${r.HoraTurno.slice(0,5)} hs</span>
+            <h4 class="font-bold text-slate-900 mt-1">${r.NombreNegocio} (${r.CantidadPersonas} pers. - $${Number(r.Subtotal).toLocaleString("es-AR")})</h4>
+          </div>
+          <button onclick="cerrarModalMisReservas(); abrirChatConPrestador('${r.IDPrestador}', '${r.NombreNegocio}', '${r.IDReserva}')"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs">
+            💬 Abrir Chat Guardado
+          </button>
+        </div>
+      `).join("");
+
+      document.getElementById("reservasModal").classList.remove("hidden");
+      document.getElementById("reservasModal").classList.add("flex");
+    }
+
+    function cerrarModalMisReservas() {
+      document.getElementById("reservasModal").classList.add("hidden");
+      document.getElementById("reservasModal").classList.remove("flex");
+    }
+
+    function toggleAuthModal() {
+      const m = document.getElementById("authModal");
+      m.classList.toggle("hidden");
+      m.classList.toggle("flex");
+    }
+
+    function autenticarCliente(e) {
+      e.preventDefault();
+      const user = {
+        id: "USR-002",
+        nombre: document.getElementById("authNombre").value,
+        email: document.getElementById("authEmail").value,
+        tel: document.getElementById("authTel").value,
+        rol: "cliente"
+      };
+      localStorage.setItem("siancas_user", JSON.stringify(user));
+      actualizarUIUsuario();
+      toggleAuthModal();
+    }
+
+    function actualizarUIUsuario() {
+      const saved = JSON.parse(localStorage.getItem("siancas_user") || "null");
+      if (saved) {
+        document.getElementById("userNameDisplay").textContent = "👤 " + saved.nombre;
+        document.getElementById("userNameDisplay").classList.remove("hidden");
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initMapa();
+      actualizarUIUsuario();
+      generarPlanConCalendario();
+    });
+  </script>
+</body>
+</html>

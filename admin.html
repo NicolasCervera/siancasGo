@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consola de Administración | SiancasGo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+
+  <header class="bg-slate-800 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div>
+        <h1 class="font-bold text-amber-400 text-lg">SiancasGo · Administración Departamental 🛡️</h1>
+        <p class="text-xs text-slate-400">Control de Prestadores, Pines de Ubicación y Cupos en General Güemes</p>
+      </div>
+      <span class="text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-semibold">Admin Conectado</span>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <section class="lg:col-span-7 bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
+      <h2 class="font-bold text-base">Prestadores, Días Habilitados, Cupos y Coordenadas</h2>
+      <div id="tablaNegocios" class="space-y-3 text-xs"></div>
+    </section>
+
+    <section class="lg:col-span-5 bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col">
+      <h2 class="font-bold text-base mb-1">Mapa General de Pines del Corredor</h2>
+      <p class="text-xs text-slate-400 mb-3">Visualización de todos los prestadores en Google Maps.</p>
+      <div id="adminMap" class="w-full h-96 rounded-xl overflow-hidden border border-slate-600 z-10"></div>
+    </section>
+  </main>
+
+  <script>
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1I_SAppFOUDQid_BGGdIVSJspmXrcG_6fHUWcwt2FuhDkeA89ONymPL4LL5x3bhmZ/exec";
+
+async function llamarBackend(payload) {
+  // Usamos text/plain para que el navegador no dispare un OPTIONS preflight bloqueado por Google
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload)
+  });
+  return await res.json();
+}
+
+    const POSTULANTES = [
+      { id: "PRE-001", nombre: "Transfer y Combi Valle de Siancas", rubro: "Movilidad y Traslados", localidad: "General Güemes", lat: -24.6672, lng: -65.0485, dias: "Lun a Dom", cupo: 15, costo: 6500, wa: "5493875445566", estado: "Aprobado" },
+      { id: "PRE-003", nombre: "Complejo Termal Aguas de El Sauce", rubro: "Termas y Relax", localidad: "El Sauce", lat: -24.6335, lng: -65.1382, dias: "Mar a Dom (Lun cerrado)", cupo: 20, costo: 6000, wa: "5493875112233", estado: "Aprobado" },
+      { id: "PRE-004", nombre: "Visita Guiada y Cabalgata Fuerte de Cobos", rubro: "Historia y Cultura", localidad: "Cobos", lat: -24.7431, lng: -65.1258, dias: "Lun a Dom", cupo: 8, costo: 4500, wa: "5493875112234", estado: "Aprobado" },
+      { id: "PRE-007", nombre: "Estancia Rural Río Mojotoro y Monte", rubro: "Rural y Naturaleza", localidad: "Betania", lat: -24.6710, lng: -65.1180, dias: "Mié a Dom", cupo: 10, costo: 8500, wa: "5493875112237", estado: "Aprobado" },
+      { id: "PRE-008", nombre: "Granja Agroecológica y Quesería Artesanal", rubro: "Rural y Naturaleza", localidad: "Corredor Madre Vieja", lat: -24.6510, lng: -65.0120, dias: "Jue a Dom", cupo: 12, costo: 7500, wa: "5493875112238", estado: "Pendiente" }
+    ];
+
+    let adminMap = null;
+
+    function initAdminMap() {
+      adminMap = L.map("adminMap").setView([-24.685, -65.095], 11);
+      L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
+        maxZoom: 20,
+        attribution: "Google Maps"
+      }).addTo(adminMap);
+
+      POSTULANTES.forEach(p => {
+        const m = L.marker([p.lat, p.lng]).addTo(adminMap);
+        m.bindPopup(`<strong>${p.nombre}</strong><br>${p.localidad} (${p.rubro})<br>Cupo/turno: ${p.cupo} pers.`);
+      });
+    }
+
+    function renderTabla() {
+      document.getElementById("tablaNegocios").innerHTML = POSTULANTES.map((p, idx) => `
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+          <div>
+            <span class="px-2 py-0.5 rounded font-bold ${p.estado === 'Aprobado' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${p.estado}</span>
+            <span class="text-slate-400 ml-2">${p.localidad} · ${p.rubro}</span>
+            <h4 class="font-bold text-white text-sm mt-1">${p.nombre} ($${p.costo})</h4>
+            <p class="text-slate-400 mt-0.5">📅 ${p.dias} · 👥 Cupo: ${p.cupo}/turno · 📍 Pin: ${p.lat}, ${p.lng}</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="adminMap.setView([${p.lat}, ${p.lng}], 15)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg font-semibold">📍 Ver Pin</button>
+            <button onclick="cambiarEstado(${idx}, 'Aprobado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg">✅ Aprobar + WA</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function cambiarEstado(idx, nuevoEstado) {
+      POSTULANTES[idx].estado = nuevoEstado;
+      renderTabla();
+      const p = POSTULANTES[idx];
+      const msg = `Hola *${p.nombre}*! Desde la Administración de *SiancasGo* confirmamos que tu servicio y tu pin en *${p.localidad}* fueron marcados como: *${nuevoEstado}*.`;
+      window.open(`https://wa.me/${p.wa}?text=${msg}`, "_blank");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initAdminMap();
+      renderTabla();
+    });
+  </script>
+</body>
+</html>
