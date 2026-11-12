@@ -3,76 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel de Prestadores y Reservas | SiancasGo</title>
+  <title>Portal de Prestadores | SiancasGo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
+  <!-- Barra Superior con Botones de Inicio de Sesión, Crear Cuenta y Cerrar Sesión -->
   <header class="bg-indigo-950 text-white shadow sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div>
-        <h1 class="font-bold text-lg">SiancasGo · Central de Prestadores 🤝</h1>
-        <p class="text-xs text-indigo-300">Administración de Reservas · Días y Cupos · Chat Interno · Geolocalización GPS</p>
+        <h1 class="font-bold text-lg">SiancasGo · Portal de Prestadores 🤝</h1>
+        <p class="text-xs text-indigo-300">Panel Protegido · Gestión Exclusiva de Tus Reservas · GPS y Chat</p>
       </div>
       <div class="flex items-center gap-2">
-        <select id="selectorNegocioActivo" onchange="cambiarNegocioActivo()" class="bg-indigo-900 text-white text-xs border border-indigo-700 rounded-lg px-3 py-1.5 font-semibold">
-          <option value="PRE-001">🚐 Transfer y Combi Valle de Siancas (Güemes)</option>
-          <option value="PRE-004">🐎 Visita y Cabalgata Fuerte de Cobos (Cobos)</option>
-          <option value="PRE-003">♨️ Complejo Termal Aguas de El Sauce (El Sauce)</option>
-          <option value="PRE-006">🥩 Peña y Parrilla El Guardamonte (Güemes)</option>
-        </select>
+        <span id="badgePrestadorActivo" class="hidden text-xs bg-indigo-900 border border-indigo-700 px-3 py-1.5 rounded-lg"></span>
+        <button id="btnHeaderLoginP" onclick="cambiarTabAuthPrestador('login')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          🔑 Iniciar Sesión
+        </button>
+        <button id="btnHeaderRegP" onclick="cambiarTabAuthPrestador('registro')" class="bg-white hover:bg-slate-100 text-indigo-950 font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          ➕ Crear Cuenta
+        </button>
+        <button id="btnCerrarSesionP" onclick="cerrarSesionPrestador()" class="hidden bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          🚪 Cerrar Sesión
+        </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+  <main class="max-w-6xl mx-auto px-4 py-6">
 
-    <!-- Pestañas del Prestador -->
-    <div class="flex flex-wrap gap-2 border-b border-slate-300 pb-3 text-xs sm:text-sm font-bold">
-      <button onclick="mostrarTab('tabReservas')" id="btn_tabReservas" class="bg-indigo-700 text-white px-4 py-2 rounded-xl shadow">
-        📅 1. Mis Reservas Recibidas
-      </button>
-      <button onclick="mostrarTab('tabCalendario')" id="btn_tabCalendario" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
-        ⏰ 2. Disponibilidad y Cupos
-      </button>
-      <button onclick="mostrarTab('tabChat')" id="btn_tabChat" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
-        💬 3. Chat con Clientes
-      </button>
-      <button onclick="mostrarTab('tabUbicacion')" id="btn_tabUbicacion" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
-        📍 4. Geolocalizar / Postular Negocio
-      </button>
-    </div>
+    <!-- PANTALLA DE SEGURIDAD (BLOQUEA EL PANEL HASTA INICIAR SESIÓN O CREAR CUENTA) -->
+    <section id="authGatePrestador" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-lg border border-slate-200 mt-4">
+      <div class="flex gap-2 mb-4 border-b pb-3">
+        <button type="button" id="btnModoLoginP" onclick="cambiarTabAuthPrestador('login')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-indigo-800 text-white">
+          🔑 Iniciar Sesión
+        </button>
+        <button type="button" id="btnModoRegP" onclick="cambiarTabAuthPrestador('registro')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-slate-100 text-slate-700">
+          ➕ Crear Cuenta
+        </button>
+      </div>
 
-    <!-- TAB 1: ADMINISTRACIÓN DE RESERVAS -->
-    <section id="tabReservas" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      <div class="lg:col-span-8 bg-white p-5 rounded-2xl shadow-sm border space-y-4">
-        <div class="flex justify-between items-center border-b pb-3">
-          <div>
-            <h2 class="font-bold text-indigo-950 text-base">Reservas de Viajeros</h2>
-            <p class="text-xs text-slate-500">Confirmá turnos, reprogramá horarios o abrí el chat directo con cada cliente.</p>
-          </div>
-          <span id="contadorReservas" class="bg-indigo-100 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">0 reservas</span>
+      <div id="errorPrestadorAuth" class="hidden bg-rose-50 border border-rose-300 text-rose-800 text-xs p-2.5 rounded-xl mb-3"></div>
+
+      <!-- Login Prestador: SOLO WhatsApp y Contraseña -->
+      <form id="formLoginPrestador" onsubmit="loginPrestador(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold block mb-1">Número de WhatsApp</label>
+          <input type="tel" id="pLoginWA" placeholder="Ej: 5493875445566" required class="w-full border rounded-lg px-3 py-2">
         </div>
-        <div id="contenedorReservasPrestador" class="space-y-3 text-sm"></div>
-      </div>
+        <div>
+          <label class="font-bold block mb-1">Contraseña</label>
+          <input type="password" id="pLoginPass" placeholder="Contraseña" required class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div class="bg-indigo-50 p-2.5 rounded-lg border border-indigo-100 text-[11px] text-indigo-900">
+          <strong>Prestadores de prueba:</strong><br>
+          • Carlos Gómez (Combi Güemes): <strong>5493875445566</strong> / <strong>prestador123</strong><br>
+          • Lucía Vargas (Cobos y El Sauce): <strong>5493875112233</strong> / <strong>prestador123</strong>
+        </div>
+        <button type="submit" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl">
+          Ingresar a Mis Reservas
+        </button>
+      </form>
 
-      <div class="lg:col-span-4 bg-white p-5 rounded-2xl shadow-sm border space-y-3">
-        <h3 class="font-bold text-indigo-950 text-base">Ocupación por Turno</h3>
-        <p class="text-xs text-slate-500">Personas anotadas por fecha y horario.</p>
-        <div id="resumenCuposBox" class="space-y-2 text-xs"></div>
-      </div>
+      <!-- Registro Prestador: SOLO Nombre Completo, WhatsApp y Contraseña -->
+      <form id="formRegPrestador" onsubmit="registrarPrestador(event)" class="hidden space-y-3 text-xs">
+        <div>
+          <label class="font-bold block mb-1">Nombre Completo</label>
+          <input type="text" id="pRegNombre" placeholder="Ej: Roberto Quiroga" required class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Número de WhatsApp (único)</label>
+          <input type="tel" id="pRegWA" placeholder="Ej: 5493875778899" required class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <div>
+          <label class="font-bold block mb-1">Contraseña</label>
+          <input type="password" id="pRegPass" placeholder="Creá tu contraseña" required class="w-full border rounded-lg px-3 py-2">
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+          Crear Cuenta de Prestador
+        </button>
+      </form>
     </section>
 
-    <!-- TAB 2: DISPONIBILIDAD, DÍAS Y CUPOS -->
-    <section id="tabCalendario" class="hidden bg-white p-6 rounded-2xl shadow-sm border max-w-2xl">
-      <h2 class="font-bold text-indigo-950 text-base mb-1">Días de Atención, Horarios y Cupo por Turno</h2>
-      <p class="text-xs text-slate-500 mb-4">Si desmarcás un día o se llena el cupo de un horario, la app del viajero no permitirá sobreventa y ofrecerá el siguiente turno libre.</p>
+    <!-- PANEL PRIVADO DEL PRESTADOR (SOLO VISIBLE CON SESIÓN INICIADA) -->
+    <section id="panelPrivadoPrestador" class="hidden space-y-6">
 
-      <form onsubmit="guardarCalendario(event)" class="space-y-4 text-sm">
+      <!-- Selector únicamente de los negocios que pertenecen a este prestador -->
+      <div class="bg-white p-4 rounded-2xl shadow-sm border flex flex-wrap justify-between items-center gap-3">
         <div>
-          <label class="font-bold block mb-2 text-xs">Días Abiertos</label>
+          <h2 class="font-bold text-indigo-950 text-sm">Mis Emprendimientos Vinculados a mi Cuenta</h2>
+          <p class="text-xs text-slate-500">Solo podés ver y gestionar las reservas de tus propios negocios.</p>
+        </div>
+        <select id="selectorMiNegocio" onchange="cambiarMiNegocio()" class="bg-indigo-50 text-indigo-950 text-xs border border-indigo-300 rounded-xl px-3 py-2 font-bold"></select>
+      </div>
+
+      <!-- Pestañas del Prestador -->
+      <div class="flex flex-wrap gap-2 border-b border-slate-300 pb-3 text-xs sm:text-sm font-bold">
+        <button onclick="mostrarTab('tabReservas')" id="btn_tabReservas" class="bg-indigo-700 text-white px-4 py-2 rounded-xl shadow">
+          📅 1. Mis Reservas Recibidas
+        </button>
+        <button onclick="mostrarTab('tabCalendario')" id="btn_tabCalendario" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
+          ⏰ 2. Disponibilidad y Cupos
+        </button>
+        <button onclick="mostrarTab('tabChat')" id="btn_tabChat" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
+          💬 3. Chat con Mis Clientes
+        </button>
+        <button onclick="mostrarTab('tabUbicacion')" id="btn_tabUbicacion" class="bg-white text-slate-700 border px-4 py-2 rounded-xl">
+          📍 4. Postular / Geolocalizar Nuevo Negocio
+        </button>
+      </div>
+
+      <!-- TAB 1: RESERVAS EXCLUSIVAS DEL PRESTADOR -->
+      <div id="tabReservas" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 bg-white p-5 rounded-2xl shadow-sm border space-y-4">
+          <div class="flex justify-between items-center border-b pb-3">
+            <div>
+              <h3 class="font-bold text-indigo-950 text-base">Reservas de Mi Emprendimiento</h3>
+              <p class="text-xs text-slate-500">Confirmá, reprogramá o chateá con los clientes que reservaron en tu servicio.</p>
+            </div>
+            <span id="contadorReservas" class="bg-indigo-100 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">0 reservas</span>
+          </div>
+          <div id="contenedorReservasPrestador" class="space-y-3 text-sm"></div>
+        </div>
+
+        <div class="lg:col-span-4 bg-white p-5 rounded-2xl shadow-sm border space-y-3">
+          <h3 class="font-bold text-indigo-950 text-base">Ocupación de Cupos</h3>
+          <div id="resumenCuposBox" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CALENDARIO Y CUPOS -->
+      <div id="tabCalendario" class="hidden bg-white p-6 rounded-2xl shadow-sm border max-w-2xl">
+        <h3 class="font-bold text-indigo-950 text-base mb-1">Días de Atención, Horarios y Cupo por Turno</h3>
+        <form onsubmit="guardarCalendario(event)" class="space-y-4 text-sm mt-3">
           <div class="grid grid-cols-4 sm:grid-cols-7 gap-2 text-xs" id="checkDias">
             <label class="border rounded-lg p-2 flex items-center gap-1.5"><input type="checkbox" value="Lun" checked> Lun</label>
             <label class="border rounded-lg p-2 flex items-center gap-1.5"><input type="checkbox" value="Mar" checked> Mar</label>
@@ -82,136 +147,127 @@
             <label class="border rounded-lg p-2 flex items-center gap-1.5"><input type="checkbox" value="Sab" checked> Sáb</label>
             <label class="border rounded-lg p-2 flex items-center gap-1.5"><input type="checkbox" value="Dom" checked> Dom</label>
           </div>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="font-bold block mb-1 text-xs">Horarios de Turnos (separados por coma)</label>
-            <input type="text" id="calHorarios" value="09:00,11:00,15:00,17:00" required class="w-full border rounded-lg px-3 py-2 text-xs">
-          </div>
-          <div>
-            <label class="font-bold block mb-1 text-xs">Cupo Máximo de Personas por Turno</label>
-            <input type="number" id="calCupo" value="8" min="1" max="100" required class="w-full border rounded-lg px-3 py-2 text-xs">
-          </div>
-        </div>
-
-        <button type="submit" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow">
-          💾 Actualizar Disponibilidad
-        </button>
-      </form>
-    </section>
-
-    <!-- TAB 3: CHAT INTERNO CON CLIENTES -->
-    <section id="tabChat" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
-      <div class="md:col-span-4 bg-white p-4 rounded-2xl shadow-sm border">
-        <h3 class="font-bold text-indigo-950 text-sm mb-3">Conversaciones Guardadas</h3>
-        <div id="listaClientesChat" class="space-y-2 text-xs"></div>
-      </div>
-
-      <div class="md:col-span-8 bg-white rounded-2xl shadow-sm border flex flex-col h-[440px] overflow-hidden">
-        <div class="bg-indigo-900 text-white px-4 py-3">
-          <h4 id="tituloChatPrestador" class="font-bold text-sm">Chat con Cliente</h4>
-          <p class="text-[11px] text-indigo-200">Memoria activa: toda la conversación queda guardada</p>
-        </div>
-        <div id="mensajesPrestadorBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 bg-slate-50 text-xs"></div>
-        <form onsubmit="enviarMensajeDesdePrestador(event)" class="p-3 bg-white border-t flex gap-2">
-          <input type="text" id="inputChatPrestador" required placeholder="Escribí tu mensaje al viajero..." class="flex-1 border rounded-xl px-3 py-2 text-xs">
-          <button type="submit" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-2 rounded-xl text-xs">Enviar</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- TAB 4: GEOLOCALIZAR MI NEGOCIO CON BOTÓN GPS Y MAPA -->
-    <section id="tabUbicacion" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
-      <div class="md:col-span-6 bg-white p-6 rounded-2xl shadow-sm border space-y-3">
-        <h2 class="text-base font-bold text-indigo-950">Geolocalizar Mi Negocio para el Mapa de Rutas</h2>
-        <p class="text-xs text-slate-500">Presioná el botón GPS o arrastrá el pin en el mapa para fijar la ubicación exacta que verán los turistas.</p>
-
-        <form onsubmit="enviarPostulacionConPin(event)" class="space-y-3 text-xs">
-          <div>
-            <label class="font-bold block mb-1">Nombre del Negocio</label>
-            <input type="text" id="negNombre" required placeholder="Ej: Comedor Regional Doña Rosa" class="w-full border rounded-lg px-3 py-2">
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="font-bold block mb-1">Rubro</label>
-              <select id="negRubro" class="w-full border rounded-lg px-3 py-2 bg-white">
-                <option value="Gastronomía Regional">Gastronomía Regional</option>
-                <option value="Termas y Relax">Termas y Relax</option>
-                <option value="Historia y Cultura">Historia y Cultura</option>
-                <option value="Rural y Naturaleza">Rural y Naturaleza</option>
-                <option value="Movilidad y Traslados">Movilidad y Traslados</option>
-                <option value="Alojamiento">Alojamiento</option>
-              </select>
+              <label class="font-bold block mb-1 text-xs">Horarios de Turnos</label>
+              <input type="text" id="calHorarios" value="09:00,11:00,15:00,17:00" required class="w-full border rounded-lg px-3 py-2 text-xs">
             </div>
             <div>
-              <label class="font-bold block mb-1">Localidad</label>
-              <select id="negLocalidad" onchange="centrarMapaEnLocalidad()" class="w-full border rounded-lg px-3 py-2 bg-white">
-                <option value="General Güemes">General Güemes</option>
-                <option value="Campo Santo">Campo Santo</option>
-                <option value="Cobos">Cobos</option>
-                <option value="El Sauce">El Sauce</option>
-                <option value="Betania">Betania</option>
-                <option value="Corredor Madre Vieja">Corredor antes de Madre Vieja</option>
-              </select>
+              <label class="font-bold block mb-1 text-xs">Cupo Máximo por Turno</label>
+              <input type="number" id="calCupo" value="10" min="1" max="100" required class="w-full border rounded-lg px-3 py-2 text-xs">
             </div>
           </div>
-
-          <!-- Botón de Geolocalización Exacta -->
-          <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-200 space-y-2">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-indigo-950">Coordenadas Exactas</span>
-              <button type="button" onclick="geolocalizarNegocioGPS()" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow">
-                📍 Geolocalizar mi negocio (GPS)
-              </button>
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <input type="number" step="any" id="negLat" value="-24.6961" required class="border rounded-lg px-2.5 py-1.5 bg-white" placeholder="Latitud">
-              <input type="number" step="any" id="negLng" value="-65.0933" required class="border rounded-lg px-2.5 py-1.5 bg-white" placeholder="Longitud">
-            </div>
-            <p id="estadoGPS" class="text-[11px] text-indigo-700">Hacé clic en el mapa o arrastrá el pin para ajustar el punto exacto.</p>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="font-bold block mb-1">Costo Promedio ($ ARS)</label>
-              <input type="number" id="negCosto" required value="7500" class="w-full border rounded-lg px-3 py-2">
-            </div>
-            <div>
-              <label class="font-bold block mb-1">WhatsApp Comercial</label>
-              <input type="tel" id="negWA" required value="5493875112233" class="w-full border rounded-lg px-3 py-2">
-            </div>
-          </div>
-
-          <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow">
-            📲 Guardar Pin y Confirmar por WhatsApp
+          <button type="submit" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow">
+            💾 Guardar Disponibilidad
           </button>
         </form>
       </div>
 
-      <div class="md:col-span-6 bg-white p-5 rounded-2xl shadow-sm border flex flex-col">
-        <h3 class="font-bold text-indigo-950 text-sm mb-1">Vista Previa del Pin en Google Maps</h3>
-        <p class="text-xs text-slate-500 mb-3">Este marcador aparecerá en el mapa de ruta cuando los viajeros elijan tu servicio.</p>
-        <div id="mapaPrestadorPin" class="w-full h-80 rounded-xl border overflow-hidden z-10"></div>
+      <!-- TAB 3: CHAT CON CLIENTES DEL PRESTADOR -->
+      <div id="tabChat" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div class="md:col-span-4 bg-white p-4 rounded-2xl shadow-sm border">
+          <h3 class="font-bold text-indigo-950 text-sm mb-3">Clientes de Mi Negocio</h3>
+          <div id="listaClientesChat" class="space-y-2 text-xs"></div>
+        </div>
+        <div class="md:col-span-8 bg-white rounded-2xl shadow-sm border flex flex-col h-[420px] overflow-hidden">
+          <div class="bg-indigo-900 text-white px-4 py-3">
+            <h4 id="tituloChatPrestador" class="font-bold text-sm">Chat con Viajero</h4>
+          </div>
+          <div id="mensajesPrestadorBox" class="flex-1 p-4 overflow-y-auto space-y-2.5 bg-slate-50 text-xs"></div>
+          <form onsubmit="enviarMensajeDesdePrestador(event)" class="p-3 bg-white border-t flex gap-2">
+            <input type="text" id="inputChatPrestador" required placeholder="Escribí tu respuesta al cliente..." class="flex-1 border rounded-xl px-3 py-2 text-xs">
+            <button type="submit" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-4 py-2 rounded-xl text-xs">Enviar</button>
+          </form>
+        </div>
       </div>
-    </section>
 
+      <!-- TAB 4: GEOLOCALIZAR Y POSTULAR NUEVO NEGOCIO -->
+      <div id="tabUbicacion" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
+        <div class="md:col-span-6 bg-white p-6 rounded-2xl shadow-sm border space-y-3">
+          <h3 class="text-base font-bold text-indigo-950">Dar de Alta y Geolocalizar Mi Negocio</h3>
+          <form onsubmit="enviarPostulacionConPin(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="font-bold block mb-1">Nombre del Emprendimiento</label>
+              <input type="text" id="negNombre" required placeholder="Ej: Cabalgatas y Merienda Campo Santo" class="w-full border rounded-lg px-3 py-2">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="font-bold block mb-1">Rubro</label>
+                <select id="negRubro" class="w-full border rounded-lg px-3 py-2 bg-white">
+                  <option value="Gastronomía Regional">Gastronomía Regional</option>
+                  <option value="Termas y Relax">Termas y Relax</option>
+                  <option value="Historia y Cultura">Historia y Cultura</option>
+                  <option value="Rural y Naturaleza">Rural y Naturaleza</option>
+                  <option value="Movilidad y Traslados">Movilidad y Traslados</option>
+                </select>
+              </div>
+              <div>
+                <label class="font-bold block mb-1">Localidad</label>
+                <select id="negLocalidad" onchange="centrarMapaEnLocalidad()" class="w-full border rounded-lg px-3 py-2 bg-white">
+                  <option value="General Güemes">General Güemes</option>
+                  <option value="Campo Santo">Campo Santo</option>
+                  <option value="Cobos">Cobos</option>
+                  <option value="El Sauce">El Sauce</option>
+                  <option value="Betania">Betania</option>
+                  <option value="Corredor Madre Vieja">Corredor antes de Madre Vieja</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-200 space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="font-bold text-indigo-950">Coordenadas GPS</span>
+                <button type="button" onclick="geolocalizarNegocioGPS()" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow">
+                  📍 Geolocalizar mi negocio (GPS)
+                </button>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <input type="number" step="any" id="negLat" value="-24.6961" required class="border rounded-lg px-2.5 py-1.5 bg-white">
+                <input type="number" step="any" id="negLng" value="-65.0933" required class="border rounded-lg px-2.5 py-1.5 bg-white">
+              </div>
+              <p id="estadoGPS" class="text-[11px] text-indigo-700">Tocá el mapa o arrastrá el pin para ajustar el lugar exacto.</p>
+            </div>
+
+            <div>
+              <label class="font-bold block mb-1">Costo Promedio por Persona ($ ARS)</label>
+              <input type="number" id="negCosto" required value="7500" class="w-full border rounded-lg px-3 py-2">
+            </div>
+
+            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow">
+              📲 Guardar Negocio en Mi Cuenta y Confirmar por WhatsApp
+            </button>
+          </form>
+        </div>
+
+        <div class="md:col-span-6 bg-white p-5 rounded-2xl shadow-sm border flex flex-col">
+          <h3 class="font-bold text-indigo-950 text-sm mb-2">Pin Exacto en Google Maps</h3>
+          <div id="mapaPrestadorPin" class="w-full h-80 rounded-xl border overflow-hidden z-10"></div>
+        </div>
+      </div>
+
+    </section>
   </main>
 
   <script>
-   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1I_SAppFOUDQid_BGGdIVSJspmXrcG_6fHUWcwt2FuhDkeA89ONymPL4LL5x3bhmZ/exec";
-
-async function llamarBackend(payload) {
-  // Usamos text/plain para que el navegador no dispare un OPTIONS preflight bloqueado por Google
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-  return await res.json();
-}
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKhqMx5LA8iyB8beyJf1qJVG04M6TVah17aerUOOgnpgATLjPBhrZq5IN6qEZ3rTbk/exec";
     const ADMIN_WA = "5493875622260";
+
+    function normalizarWA(v) {
+      return String(v || "").replace(/[^0-9]/g, "");
+    }
+
+    const PRESTADORES_SEMILLA = [
+      { ID: "PRE-001", IDUsuario: "USR-005", NombreNegocio: "Transfer y Combi Valle de Siancas", Rubro: "Movilidad y Traslados", Localidad: "General Güemes", CostoPromedio: 6500, Latitud: -24.6672, Longitud: -65.0485, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,09:00,11:00,14:00,16:00,18:00", CupoMaximoTurno: 15, WhatsApp: "5493875445566", Password: "prestador123", Estado: "Aprobado" },
+      { ID: "PRE-002", IDUsuario: "USR-005", NombreNegocio: "Remis Turístico Ruta 34 y 9", Rubro: "Movilidad y Traslados", Localidad: "Campo Santo", CostoPromedio: 5500, Latitud: -24.6961, Longitud: -65.0933, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,10:00,12:00,15:00,17:00", CupoMaximoTurno: 4, WhatsApp: "5493875445566", Password: "prestador123", Estado: "Aprobado" },
+      { ID: "PRE-003", IDUsuario: "USR-004", NombreNegocio: "Complejo Termal Aguas de El Sauce", Rubro: "Termas y Relax", Localidad: "El Sauce", CostoPromedio: 6000, Latitud: -24.6335, Longitud: -65.1382, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00,16:00", CupoMaximoTurno: 20, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
+      { ID: "PRE-004", IDUsuario: "USR-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", Rubro: "Historia y Cultura", Localidad: "Cobos", CostoPromedio: 4500, Latitud: -24.7431, Longitud: -65.1258, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 8, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
+      { ID: "PRE-006", IDUsuario: "USR-004", NombreNegocio: "Peña y Parrilla El Guardamonte", Rubro: "Gastronomía Regional", Localidad: "General Güemes", CostoPromedio: 12000, Latitud: -24.6645, Longitud: -65.0460, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "12:00,13:00,20:00,21:30", CupoMaximoTurno: 30, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
+      { ID: "PRE-008", IDUsuario: "USR-004", NombreNegocio: "Granja Agroecológica y Quesería Artesanal", Rubro: "Rural y Naturaleza", Localidad: "Corredor Madre Vieja", CostoPromedio: 7500, Latitud: -24.6510, Longitud: -65.0120, DiasAtencion: "Jue,Vie,Sab,Dom", HorariosTurnos: "10:00,12:00,16:00", CupoMaximoTurno: 12, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Pendiente" }
+    ];
+
+    if (!localStorage.getItem("siancas_prestadores_db")) {
+      localStorage.setItem("siancas_prestadores_db", JSON.stringify(PRESTADORES_SEMILLA));
+    }
 
     const COORDS_LOCALIDADES = {
       "General Güemes": [-24.6672, -65.0485],
@@ -225,6 +281,140 @@ async function llamarBackend(payload) {
     let mapPin = null;
     let markerNegocio = null;
     let clienteActivoChat = { idCliente: "USR-002", nombreCliente: "Martín Ríos", idReserva: "RES-001" };
+
+    // AUTENTICACIÓN DEL PRESTADOR (SOLO WHATSAPP Y CONTRASEÑA)
+    function cambiarTabAuthPrestador(modo) {
+      document.getElementById("errorPrestadorAuth").classList.add("hidden");
+      if (modo === "login") {
+        document.getElementById("formLoginPrestador").classList.remove("hidden");
+        document.getElementById("formRegPrestador").classList.add("hidden");
+        document.getElementById("btnModoLoginP").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-indigo-800 text-white";
+        document.getElementById("btnModoRegP").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-slate-100 text-slate-700";
+      } else {
+        document.getElementById("formLoginPrestador").classList.add("hidden");
+        document.getElementById("formRegPrestador").classList.remove("hidden");
+        document.getElementById("btnModoRegP").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-amber-500 text-slate-950";
+        document.getElementById("btnModoLoginP").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-slate-100 text-slate-700";
+      }
+    }
+
+    function mostrarErrorP(msg) {
+      const b = document.getElementById("errorPrestadorAuth");
+      b.textContent = msg;
+      b.classList.remove("hidden");
+    }
+
+    function loginPrestador(e) {
+      e.preventDefault();
+      const wa = normalizarWA(document.getElementById("pLoginWA").value);
+      const pass = document.getElementById("pLoginPass").value.trim();
+
+      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
+      const user = usuarios.find(u => normalizarWA(u.whatsapp) === wa && u.password === pass && u.rol === "prestador");
+
+      if (!user) {
+        mostrarErrorP("❌ WhatsApp o contraseña inválidos para el rol de Prestador.");
+        return;
+      }
+
+      localStorage.setItem("siancas_prestador_sesion", JSON.stringify(user));
+      actualizarVistaSesionPrestador();
+    }
+
+    function registrarPrestador(e) {
+      e.preventDefault();
+      const nombre = document.getElementById("pRegNombre").value.trim();
+      const wa = normalizarWA(document.getElementById("pRegWA").value);
+      const pass = document.getElementById("pRegPass").value.trim();
+
+      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
+      if (usuarios.some(u => normalizarWA(u.whatsapp) === wa)) {
+        mostrarErrorP("🚫 El número de WhatsApp " + wa + " ya está registrado. No se puede duplicar la cuenta; iniciá sesión.");
+        return;
+      }
+
+      const nuevo = {
+        id: "USR-" + String(usuarios.length + 1).padStart(3, "0"),
+        nombre: nombre,
+        whatsapp: wa,
+        password: pass,
+        rol: "prestador"
+      };
+      usuarios.push(nuevo);
+      localStorage.setItem("siancas_usuarios_db", JSON.stringify(usuarios));
+      localStorage.setItem("siancas_prestador_sesion", JSON.stringify(nuevo));
+      actualizarVistaSesionPrestador();
+    }
+
+    function cerrarSesionPrestador() {
+      localStorage.removeItem("siancas_prestador_sesion");
+      actualizarVistaSesionPrestador();
+    }
+
+    function actualizarVistaSesionPrestador() {
+      const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
+      const gate = document.getElementById("authGatePrestador");
+      const panel = document.getElementById("panelPrivadoPrestador");
+      const badge = document.getElementById("badgePrestadorActivo");
+      const btnL = document.getElementById("btnHeaderLoginP");
+      const btnR = document.getElementById("btnHeaderRegP");
+      const btnOut = document.getElementById("btnCerrarSesionP");
+
+      if (!sesion) {
+        gate.classList.remove("hidden");
+        panel.classList.add("hidden");
+        badge.classList.add("hidden");
+        btnOut.classList.add("hidden");
+        btnL.classList.remove("hidden");
+        btnR.classList.remove("hidden");
+        return;
+      }
+
+      gate.classList.add("hidden");
+      panel.classList.remove("hidden");
+      badge.textContent = `👤 ${sesion.nombre} (${sesion.whatsapp})`;
+      badge.classList.remove("hidden");
+      btnOut.classList.remove("hidden");
+      btnL.classList.add("hidden");
+      btnR.classList.add("hidden");
+
+      cargarNegociosExclusivosDelPrestador();
+    }
+
+    // FILTRA ESTRICTAMENTE LOS NEGOCIOS QUE PERTENECEN AL PRESTADOR LOGUEADO
+    function cargarNegociosExclusivosDelPrestador() {
+      const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
+      if (!sesion) return;
+
+      const todos = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      const mios = todos.filter(p =>
+        p.IDUsuario === sesion.id || normalizarWA(p.WhatsApp) === normalizarWA(sesion.whatsapp)
+      );
+
+      const sel = document.getElementById("selectorMiNegocio");
+      if (mios.length === 0) {
+        sel.innerHTML = `<option value="">Sin negocios cargados (Creá uno en la pestaña 4)</option>`;
+        document.getElementById("contenedorReservasPrestador").innerHTML =
+          `<p class="text-xs text-slate-400">Todavía no postulaste ningún emprendimiento con tu cuenta (${sesion.whatsapp}). Andá a la pestaña 4 para geolocalizar y dar de alta tu negocio.</p>`;
+        document.getElementById("contadorReservas").textContent = "0 reservas";
+        document.getElementById("resumenCuposBox").innerHTML = "";
+        return;
+      }
+
+      sel.innerHTML = mios.map(n => `<option value="${n.ID}">${n.NombreNegocio} (${n.Localidad})</option>`).join("");
+      renderizarReservasPrestador();
+    }
+
+    function obtenerNegocioActual() {
+      const sel = document.getElementById("selectorMiNegocio");
+      if (!sel || !sel.value) return null;
+      return { id: sel.value, nombre: sel.options[sel.selectedIndex].text };
+    }
+
+    function cambiarMiNegocio() {
+      renderizarReservasPrestador();
+      renderizarChatPrestador();
+    }
 
     function mostrarTab(tabId) {
       ["tabReservas", "tabCalendario", "tabChat", "tabUbicacion"].forEach(id => {
@@ -240,26 +430,13 @@ async function llamarBackend(payload) {
           else mapPin.invalidateSize();
         }, 100);
       }
-      if (tabId === "tabChat") {
-        renderizarChatPrestador();
-      }
-    }
-
-    function obtenerNegocioActual() {
-      const sel = document.getElementById("selectorNegocioActivo");
-      return {
-        id: sel.value,
-        nombre: sel.options[sel.selectedIndex].text.replace(/^[^\s]+\s/, "")
-      };
-    }
-
-    function cambiarNegocioActivo() {
-      renderizarReservasPrestador();
-      renderizarChatPrestador();
+      if (tabId === "tabChat") renderizarChatPrestador();
     }
 
     function renderizarReservasPrestador() {
       const neg = obtenerNegocioActual();
+      if (!neg) return;
+
       const todas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
       const mias = todas.filter(r => r.IDPrestador === neg.id);
 
@@ -267,7 +444,7 @@ async function llamarBackend(payload) {
       const cont = document.getElementById("contenedorReservasPrestador");
 
       if (mias.length === 0) {
-        cont.innerHTML = `<p class="text-xs text-slate-400 italic">No hay reservas registradas para este negocio.</p>`;
+        cont.innerHTML = `<p class="text-xs text-slate-400 italic">No hay reservas registradas para ${neg.nombre}.</p>`;
       } else {
         cont.innerHTML = mias.map(r => `
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between gap-3">
@@ -278,8 +455,8 @@ async function llamarBackend(payload) {
                 </span>
                 <span class="text-xs font-bold text-indigo-900">📅 ${r.FechaServicio} · 🕒 ${String(r.HoraTurno).slice(0,5)} hs</span>
               </div>
-              <h4 class="font-bold text-slate-900 mt-1">👤 ${r.NombreCliente} (${r.CantidadPersonas} personas)</h4>
-              <p class="text-xs text-slate-500">Reserva ${r.IDReserva} · Subtotal: $${Number(r.Subtotal).toLocaleString("es-AR")}</p>
+              <h4 class="font-bold text-slate-900 mt-1">👤 Cliente: ${r.NombreCliente} (${r.CantidadPersonas} pers.)</h4>
+              <p class="text-xs text-slate-500">WhatsApp Cliente: ${r.TelefonoCliente || "-"} · Reserva ${r.IDReserva} · $${Number(r.Subtotal).toLocaleString("es-AR")}</p>
             </div>
             <div class="flex flex-wrap items-center gap-1.5 text-xs">
               <button onclick="cambiarEstadoReserva('${r.IDReserva}', 'Confirmada')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg">
@@ -308,7 +485,7 @@ async function llamarBackend(payload) {
       const boxCupos = document.getElementById("resumenCuposBox");
       const claves = Object.keys(mapaCupos);
       boxCupos.innerHTML = claves.length === 0
-        ? `<p class="text-slate-400">Todos los horarios tienen cupo completo disponible.</p>`
+        ? `<p class="text-slate-400">Todos los horarios tienen 100% de cupo disponible.</p>`
         : claves.map(k => `
             <div class="p-2.5 rounded-lg bg-indigo-50 border border-indigo-200 flex justify-between items-center">
               <span class="font-semibold text-indigo-950">${k}</span>
@@ -327,7 +504,7 @@ async function llamarBackend(payload) {
     }
 
     function reprogramarTurno(idReserva) {
-      const nuevaHora = prompt("Ingresá el nuevo horario para el turno (ej: 15:00):", "15:00");
+      const nuevaHora = prompt("Nuevo horario para la reserva (ej: 15:00):", "15:00");
       if (!nuevaHora) return;
       const todas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
       const idx = todas.findIndex(r => r.IDReserva === idReserva);
@@ -340,10 +517,7 @@ async function llamarBackend(payload) {
 
     function guardarCalendario(e) {
       e.preventDefault();
-      const dias = Array.from(document.querySelectorAll("#checkDias input:checked")).map(c => c.value).join(",");
-      const horarios = document.getElementById("calHorarios").value;
-      const cupo = document.getElementById("calCupo").value;
-      alert(`✅ Disponibilidad guardada: Días [${dias}] · Turnos [${horarios}] · Cupo máx: ${cupo} personas.`);
+      alert("✅ Disponibilidad y cupos actualizados para tu negocio.");
     }
 
     function irAlChatConCliente(idCliente, nombreCliente, idReserva) {
@@ -353,22 +527,21 @@ async function llamarBackend(payload) {
 
     function renderizarChatPrestador() {
       const neg = obtenerNegocioActual();
+      if (!neg) return;
       const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
 
       document.getElementById("listaClientesChat").innerHTML = `
-        <button onclick="renderizarChatPrestador()" class="w-full text-left p-3 rounded-xl bg-indigo-50 border border-indigo-200 font-bold text-indigo-950">
+        <button class="w-full text-left p-3 rounded-xl bg-indigo-50 border border-indigo-200 font-bold text-indigo-950">
           👤 ${clienteActivoChat.nombreCliente} (${clienteActivoChat.idReserva})
         </button>
       `;
 
-      document.getElementById("tituloChatPrestador").textContent =
-        `Chat con ${clienteActivoChat.nombreCliente} · ${neg.nombre}`;
-
+      document.getElementById("tituloChatPrestador").textContent = `Chat con ${clienteActivoChat.nombreCliente} · ${neg.nombre}`;
       const conv = historial.filter(m => m.IDPrestador === neg.id);
       const box = document.getElementById("mensajesPrestadorBox");
 
       if (conv.length === 0) {
-        box.innerHTML = `<p class="text-slate-400 text-center my-8">Sin mensajes aún. Escribile para coordinar su reserva.</p>`;
+        box.innerHTML = `<p class="text-slate-400 text-center my-8">Aún no hay mensajes en este negocio.</p>`;
         return;
       }
 
@@ -389,12 +562,14 @@ async function llamarBackend(payload) {
     function enviarMensajeDesdePrestador(e) {
       e.preventDefault();
       const neg = obtenerNegocioActual();
+      if (!neg) return;
       const input = document.getElementById("inputChatPrestador");
       const texto = input.value.trim();
       if (!texto) return;
 
       const ahora = new Date().toISOString().slice(0, 16).replace("T", " ");
-      const nuevoMsg = {
+      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
+      historial.push({
         IDMensaje: "MSG-" + Date.now().toString().slice(-4),
         IDReserva: clienteActivoChat.idReserva,
         IDCliente: clienteActivoChat.idCliente,
@@ -404,10 +579,7 @@ async function llamarBackend(payload) {
         EmisorRol: "prestador",
         TextoMensaje: texto,
         FechaHora: ahora
-      };
-
-      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
-      historial.push(nuevoMsg);
+      });
       localStorage.setItem("siancas_chat_history", JSON.stringify(historial));
       input.value = "";
       renderizarChatPrestador();
@@ -416,22 +588,15 @@ async function llamarBackend(payload) {
     function initMapaPrestador() {
       const lat = parseFloat(document.getElementById("negLat").value);
       const lng = parseFloat(document.getElementById("negLng").value);
-
       mapPin = L.map("mapaPrestadorPin").setView([lat, lng], 14);
-      L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", {
-        maxZoom: 20,
-        attribution: "Google Maps Hybrid"
-      }).addTo(mapPin);
-
+      L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 20 }).addTo(mapPin);
       markerNegocio = L.marker([lat, lng], { draggable: true }).addTo(mapPin);
-      markerNegocio.bindPopup("<strong>Pin de tu negocio</strong><br>Arrastralo al punto exacto.").openPopup();
 
-      markerNegocio.on("dragend", function(ev) {
+      markerNegocio.on("dragend", ev => {
         const pos = ev.target.getLatLng();
         actualizarInputsCoords(pos.lat, pos.lng);
       });
-
-      mapPin.on("click", function(ev) {
+      mapPin.on("click", ev => {
         markerNegocio.setLatLng(ev.latlng);
         actualizarInputsCoords(ev.latlng.lat, ev.latlng.lng);
       });
@@ -440,7 +605,7 @@ async function llamarBackend(payload) {
     function actualizarInputsCoords(lat, lng) {
       document.getElementById("negLat").value = lat.toFixed(6);
       document.getElementById("negLng").value = lng.toFixed(6);
-      document.getElementById("estadoGPS").textContent = `✅ Coordenadas fijadas: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      document.getElementById("estadoGPS").textContent = `✅ Pin fijado: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     }
 
     function centrarMapaEnLocalidad() {
@@ -455,50 +620,60 @@ async function llamarBackend(payload) {
 
     function geolocalizarNegocioGPS() {
       const status = document.getElementById("estadoGPS");
-      if (!navigator.geolocation) {
-        status.textContent = "⚠️ Navegador sin soporte GPS. Hacé clic sobre el mapa.";
-        return;
-      }
-      status.textContent = "📡 Obteniendo coordenadas GPS de tu ubicación actual...";
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          actualizarInputsCoords(lat, lng);
-          if (mapPin && markerNegocio) {
-            mapPin.setView([lat, lng], 16);
-            markerNegocio.setLatLng([lat, lng]);
-          }
-        },
-        () => {
-          status.textContent = "⚠️ Permiso de GPS denegado. Tocá el mapa para ubicar tu pin.";
-        },
-        { enableHighAccuracy: true }
-      );
+      if (!navigator.geolocation) return;
+      status.textContent = "📡 Obteniendo coordenadas GPS...";
+      navigator.geolocation.getCurrentPosition(pos => {
+        actualizarInputsCoords(pos.coords.latitude, pos.coords.longitude);
+        if (mapPin && markerNegocio) {
+          mapPin.setView([pos.coords.latitude, pos.coords.longitude], 16);
+          markerNegocio.setLatLng([pos.coords.latitude, pos.coords.longitude]);
+        }
+      });
     }
 
     function enviarPostulacionConPin(e) {
       e.preventDefault();
+      const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
+      if (!sesion) return;
+
       const nombre = document.getElementById("negNombre").value;
       const rubro = document.getElementById("negRubro").value;
       const localidad = document.getElementById("negLocalidad").value;
-      const lat = document.getElementById("negLat").value;
-      const lng = document.getElementById("negLng").value;
-      const costo = document.getElementById("negCosto").value;
-      const wa = document.getElementById("negWA").value;
+      const lat = parseFloat(document.getElementById("negLat").value);
+      const lng = parseFloat(document.getElementById("negLng").value);
+      const costo = Number(document.getElementById("negCosto").value);
 
-      const texto = `Hola Admin de *SiancasGo*! Solicito el alta de mi negocio con pin geolocalizado:%0A` +
-                    `🏪 *Negocio:* ${nombre}%0A` +
-                    `🏷️ *Rubro:* ${rubro}%0A` +
+      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      const nuevoId = "PRE-" + String(prestadores.length + 1).padStart(3, "0");
+      prestadores.push({
+        ID: nuevoId,
+        IDUsuario: sesion.id,
+        NombreNegocio: nombre,
+        Rubro: rubro,
+        Localidad: localidad,
+        CostoPromedio: costo,
+        Latitud: lat,
+        Longitud: lng,
+        DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom",
+        HorariosTurnos: "09:00,11:00,15:00,17:00",
+        CupoMaximoTurno: 10,
+        WhatsApp: sesion.whatsapp,
+        Password: sesion.password,
+        Estado: "Pendiente"
+      });
+      localStorage.setItem("siancas_prestadores_db", JSON.stringify(prestadores));
+      cargarNegociosExclusivosDelPrestador();
+
+      const texto = `Hola Admin de *SiancasGo*! Soy *${sesion.nombre}* (${sesion.whatsapp}) y postulo mi negocio:%0A` +
+                    `🏪 *Negocio:* ${nombre} (${nuevoId})%0A` +
                     `📍 *Localidad:* ${localidad}%0A` +
                     `🗺️ *Pin GPS:* ${lat}, ${lng}%0A` +
-                    `💲 *Costo:* $${costo}%0A` +
-                    `📞 *WhatsApp:* ${wa}`;
+                    `💲 *Costo:* $${costo}`;
       window.open(`https://wa.me/${ADMIN_WA}?text=${texto}`, "_blank");
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      renderizarReservasPrestador();
+      actualizarVistaSesionPrestador();
     });
   </script>
 </body>

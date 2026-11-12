@@ -10,94 +10,342 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
 
-  <header class="bg-slate-800 border-b border-slate-700">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+  <!-- Barra Superior con Controles de Sesión de Administrador -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div>
-        <h1 class="font-bold text-amber-400 text-lg">SiancasGo · Administración Departamental 🛡️</h1>
-        <p class="text-xs text-slate-400">Control de Prestadores, Pines de Ubicación y Cupos en General Güemes</p>
+        <h1 class="font-bold text-amber-400 text-lg">SiancasGo · Administración Central 🛡️</h1>
+        <p class="text-xs text-slate-400">Auditoría de Prestadores, Mapa Departamental y Reservas por Comercio</p>
       </div>
-      <span class="text-xs bg-emerald-900 text-emerald-300 px-3 py-1 rounded-full font-semibold">Admin Conectado</span>
+      <div class="flex items-center gap-2">
+        <span id="badgeAdmin" class="hidden text-xs bg-slate-900 border border-slate-600 px-3 py-1.5 rounded-lg text-emerald-300"></span>
+        <button id="btnHeaderLoginA" onclick="cambiarTabAuthAdmin('login')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          🔑 Iniciar Sesión
+        </button>
+        <button id="btnHeaderRegA" onclick="cambiarTabAuthAdmin('registro')" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          ➕ Crear Cuenta
+        </button>
+        <button id="btnCerrarSesionA" onclick="cerrarSesionAdmin()" class="hidden bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs">
+          🚪 Cerrar Sesión
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-    <section class="lg:col-span-7 bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
-      <h2 class="font-bold text-base">Prestadores, Días Habilitados, Cupos y Coordenadas</h2>
-      <div id="tablaNegocios" class="space-y-3 text-xs"></div>
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- PANTALLA DE LOGIN / CREAR CUENTA DE ADMINISTRADOR (SOLO WHATSAPP Y CONTRASEÑA) -->
+    <section id="authGateAdmin" class="max-w-md mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl mt-4">
+      <div class="flex gap-2 mb-4 border-b border-slate-700 pb-3">
+        <button type="button" id="btnModoLoginA" onclick="cambiarTabAuthAdmin('login')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-amber-500 text-slate-950">
+          🔑 Iniciar Sesión
+        </button>
+        <button type="button" id="btnModoRegA" onclick="cambiarTabAuthAdmin('registro')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-slate-700 text-slate-300">
+          ➕ Crear Cuenta
+        </button>
+      </div>
+
+      <div id="errorAdminAuth" class="hidden bg-rose-950 border border-rose-700 text-rose-200 text-xs p-2.5 rounded-xl mb-3"></div>
+
+      <!-- Login Admin: SOLO WhatsApp y Contraseña -->
+      <form id="formLoginAdmin" onsubmit="loginAdmin(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold block mb-1 text-slate-300">Número de WhatsApp Admin</label>
+          <input type="tel" id="aLoginWA" placeholder="Ej: 5493875000001" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="font-bold block mb-1 text-slate-300">Contraseña</label>
+          <input type="password" id="aLoginPass" placeholder="Contraseña" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 text-[11px] text-slate-400">
+          <strong>Admin de prueba:</strong> WhatsApp <strong>5493875000001</strong> / Clave: <strong>admin123</strong>
+        </div>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+          Desbloquear Consola de Administración
+        </button>
+      </form>
+
+      <!-- Crear Cuenta Admin: SOLO Nombre Completo, WhatsApp y Contraseña -->
+      <form id="formRegAdmin" onsubmit="registrarAdmin(event)" class="hidden space-y-3 text-xs">
+        <div>
+          <label class="font-bold block mb-1 text-slate-300">Nombre Completo</label>
+          <input type="text" id="aRegNombre" placeholder="Nombre y Apellido" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="font-bold block mb-1 text-slate-300">Número de WhatsApp (único)</label>
+          <input type="tel" id="aRegWA" placeholder="Ej: 5493875000999" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <div>
+          <label class="font-bold block mb-1 text-slate-300">Contraseña</label>
+          <input type="password" id="aRegPass" placeholder="Contraseña" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl">
+          Crear Cuenta de Administrador
+        </button>
+      </form>
     </section>
 
-    <section class="lg:col-span-5 bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col">
-      <h2 class="font-bold text-base mb-1">Mapa General de Pines del Corredor</h2>
-      <p class="text-xs text-slate-400 mb-3">Visualización de todos los prestadores en Google Maps.</p>
-      <div id="adminMap" class="w-full h-96 rounded-xl overflow-hidden border border-slate-600 z-10"></div>
+    <!-- CONSOLA PRIVADA DEL ADMINISTRADOR -->
+    <section id="panelPrivadoAdmin" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Columna Izquierda: Listado de Todos los Prestadores -->
+      <div class="lg:col-span-6 bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
+        <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+          <div>
+            <h2 class="font-bold text-base text-white">1. Listado de Prestadores</h2>
+            <p class="text-xs text-slate-400">Seleccioná cualquier prestador para ver todas sus reservas a la derecha.</p>
+          </div>
+          <span id="totalPrestadoresBadge" class="text-xs bg-slate-700 px-3 py-1 rounded-full">0 comercios</span>
+        </div>
+        <div id="tablaNegocios" class="space-y-3 text-xs"></div>
+      </div>
+
+      <!-- Columna Derecha: Reservas del Prestador Seleccionado + Mapa -->
+      <div class="lg:col-span-6 space-y-6">
+
+        <!-- Detalle de Reservas del Prestador Seleccionado -->
+        <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/40 space-y-3">
+          <div class="flex flex-wrap justify-between items-center border-b border-slate-700 pb-3 gap-2">
+            <div>
+              <h2 id="tituloPrestadorSeleccionado" class="font-bold text-base text-amber-400">2. Reservas del Prestador Seleccionado</h2>
+              <p id="subtituloPrestadorSeleccionado" class="text-xs text-slate-400">Hacé clic en un prestador de la lista izquierda para inspeccionar sus reservas.</p>
+            </div>
+            <span id="badgeReservasPrestador" class="bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full">0 reservas</span>
+          </div>
+          <div id="contenedorReservasDelPrestadorAdmin" class="space-y-2.5 text-xs max-h-80 overflow-y-auto"></div>
+        </div>
+
+        <!-- Mapa General del Departamento -->
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col">
+          <h3 class="font-bold text-sm mb-1">Mapa Geográfico de Prestadores</h3>
+          <p class="text-xs text-slate-400 mb-3">Ubicación exacta de todos los servicios del corredor General Güemes.</p>
+          <div id="adminMap" class="w-full h-72 rounded-xl overflow-hidden border border-slate-600 z-10"></div>
+        </div>
+
+      </div>
     </section>
+
   </main>
 
   <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKhqMx5LA8iyB8beyJf1qJVG04M6TVah17aerUOOgnpgATLjPBhrZq5IN6qEZ3rTbk/exec";
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx1I_SAppFOUDQid_BGGdIVSJspmXrcG_6fHUWcwt2FuhDkeA89ONymPL4LL5x3bhmZ/exec";
-
-async function llamarBackend(payload) {
-  // Usamos text/plain para que el navegador no dispare un OPTIONS preflight bloqueado por Google
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-  return await res.json();
-}
-
-    const POSTULANTES = [
-      { id: "PRE-001", nombre: "Transfer y Combi Valle de Siancas", rubro: "Movilidad y Traslados", localidad: "General Güemes", lat: -24.6672, lng: -65.0485, dias: "Lun a Dom", cupo: 15, costo: 6500, wa: "5493875445566", estado: "Aprobado" },
-      { id: "PRE-003", nombre: "Complejo Termal Aguas de El Sauce", rubro: "Termas y Relax", localidad: "El Sauce", lat: -24.6335, lng: -65.1382, dias: "Mar a Dom (Lun cerrado)", cupo: 20, costo: 6000, wa: "5493875112233", estado: "Aprobado" },
-      { id: "PRE-004", nombre: "Visita Guiada y Cabalgata Fuerte de Cobos", rubro: "Historia y Cultura", localidad: "Cobos", lat: -24.7431, lng: -65.1258, dias: "Lun a Dom", cupo: 8, costo: 4500, wa: "5493875112234", estado: "Aprobado" },
-      { id: "PRE-007", nombre: "Estancia Rural Río Mojotoro y Monte", rubro: "Rural y Naturaleza", localidad: "Betania", lat: -24.6710, lng: -65.1180, dias: "Mié a Dom", cupo: 10, costo: 8500, wa: "5493875112237", estado: "Aprobado" },
-      { id: "PRE-008", nombre: "Granja Agroecológica y Quesería Artesanal", rubro: "Rural y Naturaleza", localidad: "Corredor Madre Vieja", lat: -24.6510, lng: -65.0120, dias: "Jue a Dom", cupo: 12, costo: 7500, wa: "5493875112238", estado: "Pendiente" }
-    ];
+    function normalizarWA(v) {
+      return String(v || "").replace(/[^0-9]/g, "");
+    }
 
     let adminMap = null;
+    let idPrestadorSeleccionado = "PRE-001";
+
+    function cambiarTabAuthAdmin(modo) {
+      document.getElementById("errorAdminAuth").classList.add("hidden");
+      if (modo === "login") {
+        document.getElementById("formLoginAdmin").classList.remove("hidden");
+        document.getElementById("formRegAdmin").classList.add("hidden");
+        document.getElementById("btnModoLoginA").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-amber-500 text-slate-950";
+        document.getElementById("btnModoRegA").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-slate-700 text-slate-300";
+      } else {
+        document.getElementById("formLoginAdmin").classList.add("hidden");
+        document.getElementById("formRegAdmin").classList.remove("hidden");
+        document.getElementById("btnModoRegA").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-emerald-600 text-white";
+        document.getElementById("btnModoLoginA").className = "flex-1 py-2 rounded-xl font-bold text-xs bg-slate-700 text-slate-300";
+      }
+    }
+
+    function mostrarErrorA(msg) {
+      const b = document.getElementById("errorAdminAuth");
+      b.textContent = msg;
+      b.classList.remove("hidden");
+    }
+
+    function loginAdmin(e) {
+      e.preventDefault();
+      const wa = normalizarWA(document.getElementById("aLoginWA").value);
+      const pass = document.getElementById("aLoginPass").value.trim();
+
+      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
+      const admin = usuarios.find(u => normalizarWA(u.whatsapp) === wa && u.password === pass && u.rol === "admin");
+
+      if (!admin) {
+        mostrarErrorA("❌ Número de WhatsApp o contraseña inválidos para Administrador.");
+        return;
+      }
+
+      localStorage.setItem("siancas_admin_sesion", JSON.stringify(admin));
+      actualizarVistaSesionAdmin();
+    }
+
+    function registrarAdmin(e) {
+      e.preventDefault();
+      const nombre = document.getElementById("aRegNombre").value.trim();
+      const wa = normalizarWA(document.getElementById("aRegWA").value);
+      const pass = document.getElementById("aRegPass").value.trim();
+
+      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
+      if (usuarios.some(u => normalizarWA(u.whatsapp) === wa)) {
+        mostrarErrorA("🚫 El número de WhatsApp " + wa + " ya se encuentra registrado. No se puede crear la cuenta; iniciá sesión.");
+        return;
+      }
+
+      const nuevo = {
+        id: "USR-" + String(usuarios.length + 1).padStart(3, "0"),
+        nombre: nombre,
+        whatsapp: wa,
+        password: pass,
+        rol: "admin"
+      };
+      usuarios.push(nuevo);
+      localStorage.setItem("siancas_usuarios_db", JSON.stringify(usuarios));
+      localStorage.setItem("siancas_admin_sesion", JSON.stringify(nuevo));
+      actualizarVistaSesionAdmin();
+    }
+
+    function cerrarSesionAdmin() {
+      localStorage.removeItem("siancas_admin_sesion");
+      actualizarVistaSesionAdmin();
+    }
+
+    function actualizarVistaSesionAdmin() {
+      const sesion = JSON.parse(localStorage.getItem("siancas_admin_sesion") || "null");
+      const gate = document.getElementById("authGateAdmin");
+      const panel = document.getElementById("panelPrivadoAdmin");
+      const badge = document.getElementById("badgeAdmin");
+      const btnL = document.getElementById("btnHeaderLoginA");
+      const btnR = document.getElementById("btnHeaderRegA");
+      const btnOut = document.getElementById("btnCerrarSesionA");
+
+      if (!sesion) {
+        gate.classList.remove("hidden");
+        panel.classList.add("hidden");
+        badge.classList.add("hidden");
+        btnOut.classList.add("hidden");
+        btnL.classList.remove("hidden");
+        btnR.classList.remove("hidden");
+        return;
+      }
+
+      gate.classList.add("hidden");
+      panel.classList.remove("hidden");
+      badge.textContent = `🛡️ ${sesion.nombre} (${sesion.whatsapp})`;
+      badge.classList.remove("hidden");
+      btnOut.classList.remove("hidden");
+      btnL.classList.add("hidden");
+      btnR.classList.add("hidden");
+
+      setTimeout(() => {
+        if (!adminMap) initAdminMap();
+        else adminMap.invalidateSize();
+      }, 100);
+
+      renderTablaPrestadores();
+      seleccionarPrestadorParaVerReservas(idPrestadorSeleccionado);
+    }
 
     function initAdminMap() {
       adminMap = L.map("adminMap").setView([-24.685, -65.095], 11);
-      L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", {
-        maxZoom: 20,
-        attribution: "Google Maps"
-      }).addTo(adminMap);
+      L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 20 }).addTo(adminMap);
 
-      POSTULANTES.forEach(p => {
-        const m = L.marker([p.lat, p.lng]).addTo(adminMap);
-        m.bindPopup(`<strong>${p.nombre}</strong><br>${p.localidad} (${p.rubro})<br>Cupo/turno: ${p.cupo} pers.`);
+      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      prestadores.forEach(p => {
+        const m = L.marker([Number(p.Latitud), Number(p.Longitud)]).addTo(adminMap);
+        m.bindPopup(`<strong>${p.NombreNegocio}</strong><br>${p.Localidad} (${p.Rubro})`);
       });
     }
 
-    function renderTabla() {
-      document.getElementById("tablaNegocios").innerHTML = POSTULANTES.map((p, idx) => `
-        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-          <div>
-            <span class="px-2 py-0.5 rounded font-bold ${p.estado === 'Aprobado' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${p.estado}</span>
-            <span class="text-slate-400 ml-2">${p.localidad} · ${p.rubro}</span>
-            <h4 class="font-bold text-white text-sm mt-1">${p.nombre} ($${p.costo})</h4>
-            <p class="text-slate-400 mt-0.5">📅 ${p.dias} · 👥 Cupo: ${p.cupo}/turno · 📍 Pin: ${p.lat}, ${p.lng}</p>
+    function renderTablaPrestadores() {
+      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
+      document.getElementById("totalPrestadoresBadge").textContent = `${prestadores.length} prestadores`;
+
+      document.getElementById("tablaNegocios").innerHTML = prestadores.map((p, idx) => {
+        const cantRes = reservas.filter(r => r.IDPrestador === p.ID).length;
+        const seleccionado = p.ID === idPrestadorSeleccionado;
+        return `
+          <div onclick="seleccionarPrestadorParaVerReservas('${p.ID}')"
+               class="cursor-pointer p-3.5 rounded-xl border transition ${seleccionado ? 'bg-slate-900 border-amber-400 ring-1 ring-amber-400' : 'bg-slate-900/70 border-slate-700 hover:border-slate-500'}">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+              <div>
+                <span class="px-2 py-0.5 rounded font-bold ${p.Estado === 'Aprobado' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${p.Estado}</span>
+                <span class="text-slate-400 ml-2">${p.ID} · ${p.Localidad} · ${p.Rubro}</span>
+                <h4 class="font-bold text-white text-sm mt-1">${p.NombreNegocio} ($${Number(p.CostoPromedio).toLocaleString("es-AR")})</h4>
+                <p class="text-slate-400 mt-0.5">📞 WhatsApp: ${p.WhatsApp} · 👥 Cupo: ${p.CupoMaximoTurno}/turno</p>
+              </div>
+              <div class="flex flex-wrap gap-1.5" onclick="event.stopPropagation()">
+                <button onclick="seleccionarPrestadorParaVerReservas('${p.ID}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">
+                  📅 Reservas (${cantRes})
+                </button>
+                <button onclick="cambiarEstado(${idx}, 'Aprobado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg">
+                  ✅ Aprobar
+                </button>
+              </div>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <button onclick="adminMap.setView([${p.lat}, ${p.lng}], 15)" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg font-semibold">📍 Ver Pin</button>
-            <button onclick="cambiarEstado(${idx}, 'Aprobado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg">✅ Aprobar + WA</button>
+        `;
+      }).join("");
+    }
+
+    // AL SELECCIONAR UN PRESTADOR, MUESTRA TODAS SUS RESERVAS
+    function seleccionarPrestadorParaVerReservas(idPrestador) {
+      idPrestadorSeleccionado = idPrestador;
+      renderTablaPrestadores();
+
+      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
+      const p = prestadores.find(x => x.ID === idPrestador);
+      if (!p) return;
+
+      if (adminMap) {
+        adminMap.setView([Number(p.Latitud), Number(p.Longitud)], 14);
+      }
+
+      const reservasDelPrestador = reservas.filter(r => r.IDPrestador === idPrestador);
+      const totalFacturado = reservasDelPrestador.reduce((acc, r) => acc + Number(r.Subtotal || 0), 0);
+
+      document.getElementById("tituloPrestadorSeleccionado").textContent = `📅 Reservas de: ${p.NombreNegocio}`;
+      document.getElementById("subtituloPrestadorSeleccionado").textContent =
+        `Localidad: ${p.Localidad} · WhatsApp Prestador: ${p.WhatsApp} · Total reservado: $${totalFacturado.toLocaleString("es-AR")} ARS`;
+      document.getElementById("badgeReservasPrestador").textContent = `${reservasDelPrestador.length} reserva(s)`;
+
+      const cont = document.getElementById("contenedorReservasDelPrestadorAdmin");
+      if (reservasDelPrestador.length === 0) {
+        cont.innerHTML = `
+          <div class="p-6 text-center bg-slate-900 rounded-xl border border-slate-700 text-slate-400">
+            Este prestador (${p.NombreNegocio}) todavía no registra reservas cargadas.
+          </div>
+        `;
+        return;
+      }
+
+      cont.innerHTML = reservasDelPrestador.map(r => `
+        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-700 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded font-bold ${r.EstadoReserva === 'Confirmada' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${r.EstadoReserva}</span>
+              <span class="font-bold text-amber-300">${r.IDReserva} · 📅 ${r.FechaServicio} a las ${String(r.HoraTurno).slice(0,5)} hs</span>
+            </div>
+            <h5 class="font-bold text-white mt-1">👤 Cliente: ${r.NombreCliente} (${r.CantidadPersonas} personas)</h5>
+            <p class="text-slate-400">📞 WhatsApp Cliente: ${r.TelefonoCliente || "No informado"} · Plan: ${r.IDPlan}</p>
+          </div>
+          <div class="text-right">
+            <span class="text-sm font-bold text-emerald-400">$${Number(r.Subtotal).toLocaleString("es-AR")} ARS</span>
           </div>
         </div>
       `).join("");
     }
 
     function cambiarEstado(idx, nuevoEstado) {
-      POSTULANTES[idx].estado = nuevoEstado;
-      renderTabla();
-      const p = POSTULANTES[idx];
-      const msg = `Hola *${p.nombre}*! Desde la Administración de *SiancasGo* confirmamos que tu servicio y tu pin en *${p.localidad}* fueron marcados como: *${nuevoEstado}*.`;
-      window.open(`https://wa.me/${p.wa}?text=${msg}`, "_blank");
+      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
+      prestadores[idx].Estado = nuevoEstado;
+      localStorage.setItem("siancas_prestadores_db", JSON.stringify(prestadores));
+      renderTablaPrestadores();
+
+      const p = prestadores[idx];
+      const msg = `Hola *${p.NombreNegocio}*! Desde la Administración de *SiancasGo* confirmamos que tu servicio en *${p.Localidad}* fue marcado como: *${nuevoEstado}*.`;
+      window.open(`https://wa.me/${p.WhatsApp}?text=${msg}`, "_blank");
     }
 
     window.addEventListener("DOMContentLoaded", () => {
-      initAdminMap();
-      renderTabla();
+      actualizarVistaSesionAdmin();
     });
   </script>
 </body>
