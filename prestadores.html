@@ -10,12 +10,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-  <!-- Barra Superior con Botones de Inicio de Sesión, Crear Cuenta y Cerrar Sesión -->
   <header class="bg-indigo-950 text-white shadow sticky top-0 z-40">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div>
         <h1 class="font-bold text-lg">SiancasGo · Portal de Prestadores 🤝</h1>
-        <p class="text-xs text-indigo-300">Panel Protegido · Gestión Exclusiva de Tus Reservas · GPS y Chat</p>
+        <p class="text-xs text-indigo-300">Conectado en Vivo a Google Sheets · Tus Reservas · GPS y Chat</p>
       </div>
       <div class="flex items-center gap-2">
         <span id="badgePrestadorActivo" class="hidden text-xs bg-indigo-900 border border-indigo-700 px-3 py-1.5 rounded-lg"></span>
@@ -34,7 +33,7 @@
 
   <main class="max-w-6xl mx-auto px-4 py-6">
 
-    <!-- PANTALLA DE SEGURIDAD (BLOQUEA EL PANEL HASTA INICIAR SESIÓN O CREAR CUENTA) -->
+    <!-- LOGIN / REGISTRO EN VIVO EN LA HOJA 'Usuarios' -->
     <section id="authGatePrestador" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-lg border border-slate-200 mt-4">
       <div class="flex gap-2 mb-4 border-b pb-3">
         <button type="button" id="btnModoLoginP" onclick="cambiarTabAuthPrestador('login')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-indigo-800 text-white">
@@ -47,7 +46,6 @@
 
       <div id="errorPrestadorAuth" class="hidden bg-rose-50 border border-rose-300 text-rose-800 text-xs p-2.5 rounded-xl mb-3"></div>
 
-      <!-- Login Prestador: SOLO WhatsApp y Contraseña -->
       <form id="formLoginPrestador" onsubmit="loginPrestador(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1">Número de WhatsApp</label>
@@ -58,16 +56,15 @@
           <input type="password" id="pLoginPass" placeholder="Contraseña" required class="w-full border rounded-lg px-3 py-2">
         </div>
         <div class="bg-indigo-50 p-2.5 rounded-lg border border-indigo-100 text-[11px] text-indigo-900">
-          <strong>Prestadores de prueba:</strong><br>
+          <strong>Prestadores en hoja Usuarios:</strong><br>
           • Carlos Gómez (Combi Güemes): <strong>5493875445566</strong> / <strong>prestador123</strong><br>
           • Lucía Vargas (Cobos y El Sauce): <strong>5493875112233</strong> / <strong>prestador123</strong>
         </div>
-        <button type="submit" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl">
+        <button type="submit" id="btnSubmitLoginP" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-2.5 rounded-xl">
           Ingresar a Mis Reservas
         </button>
       </form>
 
-      <!-- Registro Prestador: SOLO Nombre Completo, WhatsApp y Contraseña -->
       <form id="formRegPrestador" onsubmit="registrarPrestador(event)" class="hidden space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1">Nombre Completo</label>
@@ -81,25 +78,23 @@
           <label class="font-bold block mb-1">Contraseña</label>
           <input type="password" id="pRegPass" placeholder="Creá tu contraseña" required class="w-full border rounded-lg px-3 py-2">
         </div>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
-          Crear Cuenta de Prestador
+        <button type="submit" id="btnSubmitRegP" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+          Crear Cuenta de Prestador en Sheets
         </button>
       </form>
     </section>
 
-    <!-- PANEL PRIVADO DEL PRESTADOR (SOLO VISIBLE CON SESIÓN INICIADA) -->
+    <!-- PANEL PRIVADO DEL PRESTADOR -->
     <section id="panelPrivadoPrestador" class="hidden space-y-6">
 
-      <!-- Selector únicamente de los negocios que pertenecen a este prestador -->
       <div class="bg-white p-4 rounded-2xl shadow-sm border flex flex-wrap justify-between items-center gap-3">
         <div>
-          <h2 class="font-bold text-indigo-950 text-sm">Mis Emprendimientos Vinculados a mi Cuenta</h2>
-          <p class="text-xs text-slate-500">Solo podés ver y gestionar las reservas de tus propios negocios.</p>
+          <h2 class="font-bold text-indigo-950 text-sm">Mis Emprendimientos en Google Sheets</h2>
+          <p class="text-xs text-slate-500">Solo ves y administrás las reservas vinculadas a tus propios negocios.</p>
         </div>
         <select id="selectorMiNegocio" onchange="cambiarMiNegocio()" class="bg-indigo-50 text-indigo-950 text-xs border border-indigo-300 rounded-xl px-3 py-2 font-bold"></select>
       </div>
 
-      <!-- Pestañas del Prestador -->
       <div class="flex flex-wrap gap-2 border-b border-slate-300 pb-3 text-xs sm:text-sm font-bold">
         <button onclick="mostrarTab('tabReservas')" id="btn_tabReservas" class="bg-indigo-700 text-white px-4 py-2 rounded-xl shadow">
           📅 1. Mis Reservas Recibidas
@@ -115,13 +110,13 @@
         </button>
       </div>
 
-      <!-- TAB 1: RESERVAS EXCLUSIVAS DEL PRESTADOR -->
+      <!-- TAB 1: RESERVAS -->
       <div id="tabReservas" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-8 bg-white p-5 rounded-2xl shadow-sm border space-y-4">
           <div class="flex justify-between items-center border-b pb-3">
             <div>
               <h3 class="font-bold text-indigo-950 text-base">Reservas de Mi Emprendimiento</h3>
-              <p class="text-xs text-slate-500">Confirmá, reprogramá o chateá con los clientes que reservaron en tu servicio.</p>
+              <p class="text-xs text-slate-500">Cada cambio actualiza en vivo la hoja <strong>Reservas</strong>.</p>
             </div>
             <span id="contadorReservas" class="bg-indigo-100 text-indigo-900 text-xs font-bold px-3 py-1 rounded-full">0 reservas</span>
           </div>
@@ -158,12 +153,12 @@
             </div>
           </div>
           <button type="submit" class="bg-indigo-700 hover:bg-indigo-800 text-white font-bold px-6 py-2.5 rounded-xl text-xs shadow">
-            💾 Guardar Disponibilidad
+            💾 Guardar Disponibilidad en Google Sheets
           </button>
         </form>
       </div>
 
-      <!-- TAB 3: CHAT CON CLIENTES DEL PRESTADOR -->
+      <!-- TAB 3: CHAT CON CLIENTES -->
       <div id="tabChat" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
         <div class="md:col-span-4 bg-white p-4 rounded-2xl shadow-sm border">
           <h3 class="font-bold text-indigo-950 text-sm mb-3">Clientes de Mi Negocio</h3>
@@ -181,7 +176,7 @@
         </div>
       </div>
 
-      <!-- TAB 4: GEOLOCALIZAR Y POSTULAR NUEVO NEGOCIO -->
+      <!-- TAB 4: POSTULAR NUEVO NEGOCIO EN HOJA 'Prestadores' -->
       <div id="tabUbicacion" class="hidden grid grid-cols-1 md:grid-cols-12 gap-6">
         <div class="md:col-span-6 bg-white p-6 rounded-2xl shadow-sm border space-y-3">
           <h3 class="text-base font-bold text-indigo-950">Dar de Alta y Geolocalizar Mi Negocio</h3>
@@ -233,8 +228,8 @@
               <input type="number" id="negCosto" required value="7500" class="w-full border rounded-lg px-3 py-2">
             </div>
 
-            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow">
-              📲 Guardar Negocio en Mi Cuenta y Confirmar por WhatsApp
+            <button type="submit" id="btnGuardarNegocio" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow">
+              📲 Guardar Negocio en Google Sheets y Confirmar por WhatsApp
             </button>
           </form>
         </div>
@@ -249,25 +244,23 @@
   </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKhqMx5LA8iyB8beyJf1qJVG04M6TVah17aerUOOgnpgATLjPBhrZq5IN6qEZ3rTbk/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
     const ADMIN_WA = "5493875622260";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
     }
 
-    const PRESTADORES_SEMILLA = [
-      { ID: "PRE-001", IDUsuario: "USR-005", NombreNegocio: "Transfer y Combi Valle de Siancas", Rubro: "Movilidad y Traslados", Localidad: "General Güemes", CostoPromedio: 6500, Latitud: -24.6672, Longitud: -65.0485, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,09:00,11:00,14:00,16:00,18:00", CupoMaximoTurno: 15, WhatsApp: "5493875445566", Password: "prestador123", Estado: "Aprobado" },
-      { ID: "PRE-002", IDUsuario: "USR-005", NombreNegocio: "Remis Turístico Ruta 34 y 9", Rubro: "Movilidad y Traslados", Localidad: "Campo Santo", CostoPromedio: 5500, Latitud: -24.6961, Longitud: -65.0933, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,10:00,12:00,15:00,17:00", CupoMaximoTurno: 4, WhatsApp: "5493875445566", Password: "prestador123", Estado: "Aprobado" },
-      { ID: "PRE-003", IDUsuario: "USR-004", NombreNegocio: "Complejo Termal Aguas de El Sauce", Rubro: "Termas y Relax", Localidad: "El Sauce", CostoPromedio: 6000, Latitud: -24.6335, Longitud: -65.1382, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00,16:00", CupoMaximoTurno: 20, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
-      { ID: "PRE-004", IDUsuario: "USR-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", Rubro: "Historia y Cultura", Localidad: "Cobos", CostoPromedio: 4500, Latitud: -24.7431, Longitud: -65.1258, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 8, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
-      { ID: "PRE-006", IDUsuario: "USR-004", NombreNegocio: "Peña y Parrilla El Guardamonte", Rubro: "Gastronomía Regional", Localidad: "General Güemes", CostoPromedio: 12000, Latitud: -24.6645, Longitud: -65.0460, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "12:00,13:00,20:00,21:30", CupoMaximoTurno: 30, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Aprobado" },
-      { ID: "PRE-008", IDUsuario: "USR-004", NombreNegocio: "Granja Agroecológica y Quesería Artesanal", Rubro: "Rural y Naturaleza", Localidad: "Corredor Madre Vieja", CostoPromedio: 7500, Latitud: -24.6510, Longitud: -65.0120, DiasAtencion: "Jue,Vie,Sab,Dom", HorariosTurnos: "10:00,12:00,16:00", CupoMaximoTurno: 12, WhatsApp: "5493875112233", Password: "prestador123", Estado: "Pendiente" }
-    ];
-
-    if (!localStorage.getItem("siancas_prestadores_db")) {
-      localStorage.setItem("siancas_prestadores_db", JSON.stringify(PRESTADORES_SEMILLA));
+    async function llamarBackend(payload) {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
     }
+
+    localStorage.removeItem("siancas_prestadores_db");
 
     const COORDS_LOCALIDADES = {
       "General Güemes": [-24.6672, -65.0485],
@@ -280,9 +273,11 @@
 
     let mapPin = null;
     let markerNegocio = null;
+    let misNegociosServidor = [];
+    let misReservasServidor = [];
+    let misMensajesServidor = [];
     let clienteActivoChat = { idCliente: "USR-002", nombreCliente: "Martín Ríos", idReserva: "RES-001" };
 
-    // AUTENTICACIÓN DEL PRESTADOR (SOLO WHATSAPP Y CONTRASEÑA)
     function cambiarTabAuthPrestador(modo) {
       document.getElementById("errorPrestadorAuth").classList.add("hidden");
       if (modo === "login") {
@@ -304,46 +299,64 @@
       b.classList.remove("hidden");
     }
 
-    function loginPrestador(e) {
+    async function loginPrestador(e) {
       e.preventDefault();
       const wa = normalizarWA(document.getElementById("pLoginWA").value);
       const pass = document.getElementById("pLoginPass").value.trim();
+      const btn = document.getElementById("btnSubmitLoginP");
+      btn.disabled = true;
+      btn.textContent = "Verificando en Sheets...";
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      const user = usuarios.find(u => normalizarWA(u.whatsapp) === wa && u.password === pass && u.rol === "prestador");
-
-      if (!user) {
-        mostrarErrorP("❌ WhatsApp o contraseña inválidos para el rol de Prestador.");
-        return;
+      try {
+        const res = await llamarBackend({
+          action: "login",
+          whatsapp: wa,
+          password: pass,
+          rolRequerido: "prestador"
+        });
+        if (!res.ok) {
+          mostrarErrorP("❌ " + (res.error || "Credenciales inválidas."));
+          return;
+        }
+        localStorage.setItem("siancas_prestador_sesion", JSON.stringify(res.usuario));
+        await actualizarVistaSesionPrestador();
+      } catch (err) {
+        mostrarErrorP("⚠️ Error de red al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ingresar a Mis Reservas";
       }
-
-      localStorage.setItem("siancas_prestador_sesion", JSON.stringify(user));
-      actualizarVistaSesionPrestador();
     }
 
-    function registrarPrestador(e) {
+    async function registrarPrestador(e) {
       e.preventDefault();
       const nombre = document.getElementById("pRegNombre").value.trim();
       const wa = normalizarWA(document.getElementById("pRegWA").value);
       const pass = document.getElementById("pRegPass").value.trim();
+      const btn = document.getElementById("btnSubmitRegP");
+      btn.disabled = true;
+      btn.textContent = "Guardando en Sheets...";
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      if (usuarios.some(u => normalizarWA(u.whatsapp) === wa)) {
-        mostrarErrorP("🚫 El número de WhatsApp " + wa + " ya está registrado. No se puede duplicar la cuenta; iniciá sesión.");
-        return;
+      try {
+        const res = await llamarBackend({
+          action: "registro",
+          nombre: nombre,
+          whatsapp: wa,
+          password: pass,
+          rol: "prestador"
+        });
+        if (!res.ok) {
+          mostrarErrorP("🚫 " + (res.error || "No se pudo crear la cuenta."));
+          return;
+        }
+        localStorage.setItem("siancas_prestador_sesion", JSON.stringify(res.usuario));
+        await actualizarVistaSesionPrestador();
+      } catch (err) {
+        mostrarErrorP("⚠️ Error de red al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear Cuenta de Prestador en Sheets";
       }
-
-      const nuevo = {
-        id: "USR-" + String(usuarios.length + 1).padStart(3, "0"),
-        nombre: nombre,
-        whatsapp: wa,
-        password: pass,
-        rol: "prestador"
-      };
-      usuarios.push(nuevo);
-      localStorage.setItem("siancas_usuarios_db", JSON.stringify(usuarios));
-      localStorage.setItem("siancas_prestador_sesion", JSON.stringify(nuevo));
-      actualizarVistaSesionPrestador();
     }
 
     function cerrarSesionPrestador() {
@@ -351,7 +364,7 @@
       actualizarVistaSesionPrestador();
     }
 
-    function actualizarVistaSesionPrestador() {
+    async function actualizarVistaSesionPrestador() {
       const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
       const gate = document.getElementById("authGatePrestador");
       const panel = document.getElementById("panelPrivadoPrestador");
@@ -378,21 +391,25 @@
       btnL.classList.add("hidden");
       btnR.classList.add("hidden");
 
-      cargarNegociosExclusivosDelPrestador();
+      await cargarNegociosYReservasDesdeSheets();
     }
 
-    // FILTRA ESTRICTAMENTE LOS NEGOCIOS QUE PERTENECEN AL PRESTADOR LOGUEADO
-    function cargarNegociosExclusivosDelPrestador() {
+    async function cargarNegociosYReservasDesdeSheets() {
       const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
       if (!sesion) return;
 
-      const todos = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      const mios = todos.filter(p =>
-        p.IDUsuario === sesion.id || normalizarWA(p.WhatsApp) === normalizarWA(sesion.whatsapp)
-      );
+      const res = await llamarBackend({
+        action: "obtenerPanelPrestador",
+        idUsuario: sesion.id,
+        whatsapp: sesion.whatsapp
+      });
+
+      misNegociosServidor = res.negocios || [];
+      misReservasServidor = res.reservas || [];
+      misMensajesServidor = res.mensajes || [];
 
       const sel = document.getElementById("selectorMiNegocio");
-      if (mios.length === 0) {
+      if (misNegociosServidor.length === 0) {
         sel.innerHTML = `<option value="">Sin negocios cargados (Creá uno en la pestaña 4)</option>`;
         document.getElementById("contenedorReservasPrestador").innerHTML =
           `<p class="text-xs text-slate-400">Todavía no postulaste ningún emprendimiento con tu cuenta (${sesion.whatsapp}). Andá a la pestaña 4 para geolocalizar y dar de alta tu negocio.</p>`;
@@ -401,7 +418,7 @@
         return;
       }
 
-      sel.innerHTML = mios.map(n => `<option value="${n.ID}">${n.NombreNegocio} (${n.Localidad})</option>`).join("");
+      sel.innerHTML = misNegociosServidor.map(n => `<option value="${n.ID}">${n.NombreNegocio} (${n.Localidad})</option>`).join("");
       renderizarReservasPrestador();
     }
 
@@ -437,9 +454,7 @@
       const neg = obtenerNegocioActual();
       if (!neg) return;
 
-      const todas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      const mias = todas.filter(r => r.IDPrestador === neg.id);
-
+      const mias = misReservasServidor.filter(r => String(r.IDPrestador) === String(neg.id));
       document.getElementById("contadorReservas").textContent = `${mias.length} reserva(s)`;
       const cont = document.getElementById("contenedorReservasPrestador");
 
@@ -494,30 +509,43 @@
           `).join("");
     }
 
-    function cambiarEstadoReserva(idReserva, nuevoEstado) {
-      const todas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      const idx = todas.findIndex(r => r.IDReserva === idReserva);
-      if (idx === -1) return;
-      todas[idx].EstadoReserva = nuevoEstado;
-      localStorage.setItem("siancas_reservas", JSON.stringify(todas));
-      renderizarReservasPrestador();
+    async function cambiarEstadoReserva(idReserva, nuevoEstado) {
+      await llamarBackend({
+        action: "cambiarEstadoReserva",
+        idReserva: idReserva,
+        nuevoEstado: nuevoEstado
+      });
+      await cargarNegociosYReservasDesdeSheets();
     }
 
-    function reprogramarTurno(idReserva) {
+    async function reprogramarTurno(idReserva) {
       const nuevaHora = prompt("Nuevo horario para la reserva (ej: 15:00):", "15:00");
       if (!nuevaHora) return;
-      const todas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      const idx = todas.findIndex(r => r.IDReserva === idReserva);
-      if (idx === -1) return;
-      todas[idx].HoraTurno = nuevaHora;
-      todas[idx].EstadoReserva = "Confirmada";
-      localStorage.setItem("siancas_reservas", JSON.stringify(todas));
-      renderizarReservasPrestador();
+      await llamarBackend({
+        action: "cambiarEstadoReserva",
+        idReserva: idReserva,
+        nuevoEstado: "Confirmada",
+        nuevaHora: nuevaHora
+      });
+      await cargarNegociosYReservasDesdeSheets();
     }
 
-    function guardarCalendario(e) {
+    async function guardarCalendario(e) {
       e.preventDefault();
-      alert("✅ Disponibilidad y cupos actualizados para tu negocio.");
+      const neg = obtenerNegocioActual();
+      if (!neg) return;
+      const dias = Array.from(document.querySelectorAll("#checkDias input:checked")).map(c => c.value).join(",");
+      const horarios = document.getElementById("calHorarios").value;
+      const cupo = document.getElementById("calCupo").value;
+
+      await llamarBackend({
+        action: "actualizarCalendarioPrestador",
+        idPrestador: neg.id,
+        diasAtencion: dias,
+        horariosTurnos: horarios,
+        cupoMaximoTurno: cupo
+      });
+      alert("✅ Disponibilidad y cupos actualizados en Google Sheets.");
     }
 
     function irAlChatConCliente(idCliente, nombreCliente, idReserva) {
@@ -528,7 +556,6 @@
     function renderizarChatPrestador() {
       const neg = obtenerNegocioActual();
       if (!neg) return;
-      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
 
       document.getElementById("listaClientesChat").innerHTML = `
         <button class="w-full text-left p-3 rounded-xl bg-indigo-50 border border-indigo-200 font-bold text-indigo-950">
@@ -537,7 +564,7 @@
       `;
 
       document.getElementById("tituloChatPrestador").textContent = `Chat con ${clienteActivoChat.nombreCliente} · ${neg.nombre}`;
-      const conv = historial.filter(m => m.IDPrestador === neg.id);
+      const conv = misMensajesServidor.filter(m => String(m.IDPrestador) === String(neg.id));
       const box = document.getElementById("mensajesPrestadorBox");
 
       if (conv.length === 0) {
@@ -546,7 +573,7 @@
       }
 
       box.innerHTML = conv.map(m => {
-        const esPrestador = m.EmisorRol === "prestador";
+        const esPrestador = String(m.EmisorRol).toLowerCase() === "prestador";
         return `
           <div class="flex ${esPrestador ? 'justify-end' : 'justify-start'}">
             <div class="max-w-[80%] rounded-2xl px-3.5 py-2 ${esPrestador ? 'bg-indigo-700 text-white' : 'bg-white border text-slate-800'}">
@@ -559,29 +586,26 @@
       box.scrollTop = box.scrollHeight;
     }
 
-    function enviarMensajeDesdePrestador(e) {
+    async function enviarMensajeDesdePrestador(e) {
       e.preventDefault();
       const neg = obtenerNegocioActual();
       if (!neg) return;
       const input = document.getElementById("inputChatPrestador");
       const texto = input.value.trim();
       if (!texto) return;
-
-      const ahora = new Date().toISOString().slice(0, 16).replace("T", " ");
-      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
-      historial.push({
-        IDMensaje: "MSG-" + Date.now().toString().slice(-4),
-        IDReserva: clienteActivoChat.idReserva,
-        IDCliente: clienteActivoChat.idCliente,
-        NombreCliente: clienteActivoChat.nombreCliente,
-        IDPrestador: neg.id,
-        NombreNegocio: neg.nombre,
-        EmisorRol: "prestador",
-        TextoMensaje: texto,
-        FechaHora: ahora
-      });
-      localStorage.setItem("siancas_chat_history", JSON.stringify(historial));
       input.value = "";
+
+      await llamarBackend({
+        action: "enviarMensaje",
+        idReserva: clienteActivoChat.idReserva,
+        idCliente: clienteActivoChat.idCliente,
+        nombreCliente: clienteActivoChat.nombreCliente,
+        idPrestador: neg.id,
+        nombreNegocio: neg.nombre,
+        emisorRol: "prestador",
+        textoMensaje: texto
+      });
+      await cargarNegociosYReservasDesdeSheets();
       renderizarChatPrestador();
     }
 
@@ -631,7 +655,7 @@
       });
     }
 
-    function enviarPostulacionConPin(e) {
+    async function enviarPostulacionConPin(e) {
       e.preventDefault();
       const sesion = JSON.parse(localStorage.getItem("siancas_prestador_sesion") || "null");
       if (!sesion) return;
@@ -643,29 +667,22 @@
       const lng = parseFloat(document.getElementById("negLng").value);
       const costo = Number(document.getElementById("negCosto").value);
 
-      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      const nuevoId = "PRE-" + String(prestadores.length + 1).padStart(3, "0");
-      prestadores.push({
-        ID: nuevoId,
-        IDUsuario: sesion.id,
-        NombreNegocio: nombre,
-        Rubro: rubro,
-        Localidad: localidad,
-        CostoPromedio: costo,
-        Latitud: lat,
-        Longitud: lng,
-        DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom",
-        HorariosTurnos: "09:00,11:00,15:00,17:00",
-        CupoMaximoTurno: 10,
-        WhatsApp: sesion.whatsapp,
-        Password: sesion.password,
-        Estado: "Pendiente"
+      const res = await llamarBackend({
+        action: "postularNegocio",
+        idUsuario: sesion.id,
+        nombreNegocio: nombre,
+        rubro: rubro,
+        localidad: localidad,
+        costoPromedio: costo,
+        latitud: lat,
+        longitud: lng,
+        whatsapp: sesion.whatsapp
       });
-      localStorage.setItem("siancas_prestadores_db", JSON.stringify(prestadores));
-      cargarNegociosExclusivosDelPrestador();
+
+      await cargarNegociosYReservasDesdeSheets();
 
       const texto = `Hola Admin de *SiancasGo*! Soy *${sesion.nombre}* (${sesion.whatsapp}) y postulo mi negocio:%0A` +
-                    `🏪 *Negocio:* ${nombre} (${nuevoId})%0A` +
+                    `🏪 *Negocio:* ${nombre} (${res.idPrestador || "PRE"})%0A` +
                     `📍 *Localidad:* ${localidad}%0A` +
                     `🗺️ *Pin GPS:* ${lat}, ${lng}%0A` +
                     `💲 *Costo:* $${costo}`;

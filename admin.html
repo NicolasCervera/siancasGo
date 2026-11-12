@@ -10,12 +10,11 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
 
-  <!-- Barra Superior con Controles de Sesión de Administrador -->
   <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div>
         <h1 class="font-bold text-amber-400 text-lg">SiancasGo · Administración Central 🛡️</h1>
-        <p class="text-xs text-slate-400">Auditoría de Prestadores, Mapa Departamental y Reservas por Comercio</p>
+        <p class="text-xs text-slate-400">Conectado en Tiempo Real a Google Sheets · Prestadores y Reservas</p>
       </div>
       <div class="flex items-center gap-2">
         <span id="badgeAdmin" class="hidden text-xs bg-slate-900 border border-slate-600 px-3 py-1.5 rounded-lg text-emerald-300"></span>
@@ -34,7 +33,7 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <!-- PANTALLA DE LOGIN / CREAR CUENTA DE ADMINISTRADOR (SOLO WHATSAPP Y CONTRASEÑA) -->
+    <!-- LOGIN / REGISTRO EN VIVO EN LA HOJA 'Usuarios' -->
     <section id="authGateAdmin" class="max-w-md mx-auto bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-2xl mt-4">
       <div class="flex gap-2 mb-4 border-b border-slate-700 pb-3">
         <button type="button" id="btnModoLoginA" onclick="cambiarTabAuthAdmin('login')" class="flex-1 py-2 rounded-xl font-bold text-xs bg-amber-500 text-slate-950">
@@ -47,7 +46,6 @@
 
       <div id="errorAdminAuth" class="hidden bg-rose-950 border border-rose-700 text-rose-200 text-xs p-2.5 rounded-xl mb-3"></div>
 
-      <!-- Login Admin: SOLO WhatsApp y Contraseña -->
       <form id="formLoginAdmin" onsubmit="loginAdmin(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1 text-slate-300">Número de WhatsApp Admin</label>
@@ -58,14 +56,13 @@
           <input type="password" id="aLoginPass" placeholder="Contraseña" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
         </div>
         <div class="bg-slate-900 p-2.5 rounded-lg border border-slate-700 text-[11px] text-slate-400">
-          <strong>Admin de prueba:</strong> WhatsApp <strong>5493875000001</strong> / Clave: <strong>admin123</strong>
+          <strong>Admin en hoja Usuarios:</strong> WhatsApp <strong>5493875000001</strong> / Clave: <strong>admin123</strong>
         </div>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+        <button type="submit" id="btnSubmitLoginA" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
           Desbloquear Consola de Administración
         </button>
       </form>
 
-      <!-- Crear Cuenta Admin: SOLO Nombre Completo, WhatsApp y Contraseña -->
       <form id="formRegAdmin" onsubmit="registrarAdmin(event)" class="hidden space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1 text-slate-300">Nombre Completo</label>
@@ -79,8 +76,8 @@
           <label class="font-bold block mb-1 text-slate-300">Contraseña</label>
           <input type="password" id="aRegPass" placeholder="Contraseña" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white">
         </div>
-        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl">
-          Crear Cuenta de Administrador
+        <button type="submit" id="btnSubmitRegA" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl">
+          Crear Cuenta de Administrador en Sheets
         </button>
       </form>
     </section>
@@ -92,7 +89,7 @@
       <div class="lg:col-span-6 bg-slate-800 p-5 rounded-2xl border border-slate-700 space-y-3">
         <div class="flex justify-between items-center border-b border-slate-700 pb-3">
           <div>
-            <h2 class="font-bold text-base text-white">1. Listado de Prestadores</h2>
+            <h2 class="font-bold text-base text-white">1. Listado de Prestadores (Hoja Prestadores)</h2>
             <p class="text-xs text-slate-400">Seleccioná cualquier prestador para ver todas sus reservas a la derecha.</p>
           </div>
           <span id="totalPrestadoresBadge" class="text-xs bg-slate-700 px-3 py-1 rounded-full">0 comercios</span>
@@ -103,22 +100,19 @@
       <!-- Columna Derecha: Reservas del Prestador Seleccionado + Mapa -->
       <div class="lg:col-span-6 space-y-6">
 
-        <!-- Detalle de Reservas del Prestador Seleccionado -->
         <div class="bg-slate-800 p-5 rounded-2xl border border-amber-500/40 space-y-3">
           <div class="flex flex-wrap justify-between items-center border-b border-slate-700 pb-3 gap-2">
             <div>
               <h2 id="tituloPrestadorSeleccionado" class="font-bold text-base text-amber-400">2. Reservas del Prestador Seleccionado</h2>
-              <p id="subtituloPrestadorSeleccionado" class="text-xs text-slate-400">Hacé clic en un prestador de la lista izquierda para inspeccionar sus reservas.</p>
+              <p id="subtituloPrestadorSeleccionado" class="text-xs text-slate-400">Hacé clic en un prestador de la izquierda.</p>
             </div>
             <span id="badgeReservasPrestador" class="bg-amber-500/20 text-amber-300 text-xs font-bold px-3 py-1 rounded-full">0 reservas</span>
           </div>
           <div id="contenedorReservasDelPrestadorAdmin" class="space-y-2.5 text-xs max-h-80 overflow-y-auto"></div>
         </div>
 
-        <!-- Mapa General del Departamento -->
         <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col">
           <h3 class="font-bold text-sm mb-1">Mapa Geográfico de Prestadores</h3>
-          <p class="text-xs text-slate-400 mb-3">Ubicación exacta de todos los servicios del corredor General Güemes.</p>
           <div id="adminMap" class="w-full h-72 rounded-xl overflow-hidden border border-slate-600 z-10"></div>
         </div>
 
@@ -128,13 +122,25 @@
   </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKhqMx5LA8iyB8beyJf1qJVG04M6TVah17aerUOOgnpgATLjPBhrZq5IN6qEZ3rTbk/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
     }
 
+    async function llamarBackend(payload) {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
     let adminMap = null;
+    let mapMarkersGroup = null;
+    let prestadoresServidor = [];
+    let reservasServidor = [];
     let idPrestadorSeleccionado = "PRE-001";
 
     function cambiarTabAuthAdmin(modo) {
@@ -158,46 +164,64 @@
       b.classList.remove("hidden");
     }
 
-    function loginAdmin(e) {
+    async function loginAdmin(e) {
       e.preventDefault();
       const wa = normalizarWA(document.getElementById("aLoginWA").value);
       const pass = document.getElementById("aLoginPass").value.trim();
+      const btn = document.getElementById("btnSubmitLoginA");
+      btn.disabled = true;
+      btn.textContent = "Verificando en Sheets...";
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      const admin = usuarios.find(u => normalizarWA(u.whatsapp) === wa && u.password === pass && u.rol === "admin");
-
-      if (!admin) {
-        mostrarErrorA("❌ Número de WhatsApp o contraseña inválidos para Administrador.");
-        return;
+      try {
+        const res = await llamarBackend({
+          action: "login",
+          whatsapp: wa,
+          password: pass,
+          rolRequerido: "admin"
+        });
+        if (!res.ok) {
+          mostrarErrorA("❌ " + (res.error || "Credenciales inválidas."));
+          return;
+        }
+        localStorage.setItem("siancas_admin_sesion", JSON.stringify(res.usuario));
+        await actualizarVistaSesionAdmin();
+      } catch (err) {
+        mostrarErrorA("⚠️ Error al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Desbloquear Consola de Administración";
       }
-
-      localStorage.setItem("siancas_admin_sesion", JSON.stringify(admin));
-      actualizarVistaSesionAdmin();
     }
 
-    function registrarAdmin(e) {
+    async function registrarAdmin(e) {
       e.preventDefault();
       const nombre = document.getElementById("aRegNombre").value.trim();
       const wa = normalizarWA(document.getElementById("aRegWA").value);
       const pass = document.getElementById("aRegPass").value.trim();
+      const btn = document.getElementById("btnSubmitRegA");
+      btn.disabled = true;
+      btn.textContent = "Guardando en Sheets...";
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      if (usuarios.some(u => normalizarWA(u.whatsapp) === wa)) {
-        mostrarErrorA("🚫 El número de WhatsApp " + wa + " ya se encuentra registrado. No se puede crear la cuenta; iniciá sesión.");
-        return;
+      try {
+        const res = await llamarBackend({
+          action: "registro",
+          nombre: nombre,
+          whatsapp: wa,
+          password: pass,
+          rol: "admin"
+        });
+        if (!res.ok) {
+          mostrarErrorA("🚫 " + (res.error || "No se pudo crear la cuenta."));
+          return;
+        }
+        localStorage.setItem("siancas_admin_sesion", JSON.stringify(res.usuario));
+        await actualizarVistaSesionAdmin();
+      } catch (err) {
+        mostrarErrorA("⚠️ Error al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear Cuenta de Administrador en Sheets";
       }
-
-      const nuevo = {
-        id: "USR-" + String(usuarios.length + 1).padStart(3, "0"),
-        nombre: nombre,
-        whatsapp: wa,
-        password: pass,
-        rol: "admin"
-      };
-      usuarios.push(nuevo);
-      localStorage.setItem("siancas_usuarios_db", JSON.stringify(usuarios));
-      localStorage.setItem("siancas_admin_sesion", JSON.stringify(nuevo));
-      actualizarVistaSesionAdmin();
     }
 
     function cerrarSesionAdmin() {
@@ -205,7 +229,7 @@
       actualizarVistaSesionAdmin();
     }
 
-    function actualizarVistaSesionAdmin() {
+    async function actualizarVistaSesionAdmin() {
       const sesion = JSON.parse(localStorage.getItem("siancas_admin_sesion") || "null");
       const gate = document.getElementById("authGateAdmin");
       const panel = document.getElementById("panelPrivadoAdmin");
@@ -237,29 +261,44 @@
         else adminMap.invalidateSize();
       }, 100);
 
-      renderTablaPrestadores();
-      seleccionarPrestadorParaVerReservas(idPrestadorSeleccionado);
+      await sincronizarPanelAdminConSheets();
     }
 
     function initAdminMap() {
       adminMap = L.map("adminMap").setView([-24.685, -65.095], 11);
       L.tileLayer("https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}", { maxZoom: 20 }).addTo(adminMap);
+      mapMarkersGroup = L.layerGroup().addTo(adminMap);
+    }
 
-      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      prestadores.forEach(p => {
-        const m = L.marker([Number(p.Latitud), Number(p.Longitud)]).addTo(adminMap);
-        m.bindPopup(`<strong>${p.NombreNegocio}</strong><br>${p.Localidad} (${p.Rubro})`);
-      });
+    async function sincronizarPanelAdminConSheets() {
+      const res = await llamarBackend({ action: "listarAdmin" });
+      if (!res.ok) return;
+
+      prestadoresServidor = res.prestadores || [];
+      reservasServidor = res.reservas || [];
+
+      if (mapMarkersGroup) {
+        mapMarkersGroup.clearLayers();
+        prestadoresServidor.forEach(p => {
+          const m = L.marker([Number(p.Latitud || -24.6672), Number(p.Longitud || -65.0485)]).addTo(mapMarkersGroup);
+          m.bindPopup(`<strong>${p.NombreNegocio}</strong><br>${p.Localidad} (${p.Rubro})`);
+        });
+      }
+
+      if (prestadoresServidor.length > 0 && !prestadoresServidor.some(p => p.ID === idPrestadorSeleccionado)) {
+        idPrestadorSeleccionado = prestadoresServidor[0].ID;
+      }
+
+      renderTablaPrestadores();
+      seleccionarPrestadorParaVerReservas(idPrestadorSeleccionado);
     }
 
     function renderTablaPrestadores() {
-      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      document.getElementById("totalPrestadoresBadge").textContent = `${prestadores.length} prestadores`;
+      document.getElementById("totalPrestadoresBadge").textContent = `${prestadoresServidor.length} prestadores`;
 
-      document.getElementById("tablaNegocios").innerHTML = prestadores.map((p, idx) => {
-        const cantRes = reservas.filter(r => r.IDPrestador === p.ID).length;
-        const seleccionado = p.ID === idPrestadorSeleccionado;
+      document.getElementById("tablaNegocios").innerHTML = prestadoresServidor.map(p => {
+        const cantRes = reservasServidor.filter(r => String(r.IDPrestador) === String(p.ID)).length;
+        const seleccionado = String(p.ID) === String(idPrestadorSeleccionado);
         return `
           <div onclick="seleccionarPrestadorParaVerReservas('${p.ID}')"
                class="cursor-pointer p-3.5 rounded-xl border transition ${seleccionado ? 'bg-slate-900 border-amber-400 ring-1 ring-amber-400' : 'bg-slate-900/70 border-slate-700 hover:border-slate-500'}">
@@ -267,14 +306,14 @@
               <div>
                 <span class="px-2 py-0.5 rounded font-bold ${p.Estado === 'Aprobado' ? 'bg-emerald-900 text-emerald-300' : 'bg-amber-900 text-amber-300'}">${p.Estado}</span>
                 <span class="text-slate-400 ml-2">${p.ID} · ${p.Localidad} · ${p.Rubro}</span>
-                <h4 class="font-bold text-white text-sm mt-1">${p.NombreNegocio} ($${Number(p.CostoPromedio).toLocaleString("es-AR")})</h4>
+                <h4 class="font-bold text-white text-sm mt-1">${p.NombreNegocio} ($${Number(p.CostoPromedio || 0).toLocaleString("es-AR")})</h4>
                 <p class="text-slate-400 mt-0.5">📞 WhatsApp: ${p.WhatsApp} · 👥 Cupo: ${p.CupoMaximoTurno}/turno</p>
               </div>
               <div class="flex flex-wrap gap-1.5" onclick="event.stopPropagation()">
                 <button onclick="seleccionarPrestadorParaVerReservas('${p.ID}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">
                   📅 Reservas (${cantRes})
                 </button>
-                <button onclick="cambiarEstado(${idx}, 'Aprobado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg">
+                <button onclick="cambiarEstado('${p.ID}', 'Aprobado')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 py-1.5 rounded-lg">
                   ✅ Aprobar
                 </button>
               </div>
@@ -284,21 +323,18 @@
       }).join("");
     }
 
-    // AL SELECCIONAR UN PRESTADOR, MUESTRA TODAS SUS RESERVAS
     function seleccionarPrestadorParaVerReservas(idPrestador) {
       idPrestadorSeleccionado = idPrestador;
       renderTablaPrestadores();
 
-      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      const p = prestadores.find(x => x.ID === idPrestador);
+      const p = prestadoresServidor.find(x => String(x.ID) === String(idPrestador));
       if (!p) return;
 
       if (adminMap) {
-        adminMap.setView([Number(p.Latitud), Number(p.Longitud)], 14);
+        adminMap.setView([Number(p.Latitud || -24.6672), Number(p.Longitud || -65.0485)], 14);
       }
 
-      const reservasDelPrestador = reservas.filter(r => r.IDPrestador === idPrestador);
+      const reservasDelPrestador = reservasServidor.filter(r => String(r.IDPrestador) === String(idPrestador));
       const totalFacturado = reservasDelPrestador.reduce((acc, r) => acc + Number(r.Subtotal || 0), 0);
 
       document.getElementById("tituloPrestadorSeleccionado").textContent = `📅 Reservas de: ${p.NombreNegocio}`;
@@ -310,7 +346,7 @@
       if (reservasDelPrestador.length === 0) {
         cont.innerHTML = `
           <div class="p-6 text-center bg-slate-900 rounded-xl border border-slate-700 text-slate-400">
-            Este prestador (${p.NombreNegocio}) todavía no registra reservas cargadas.
+            Este prestador (${p.NombreNegocio}) todavía no registra reservas en la hoja Reservas.
           </div>
         `;
         return;
@@ -333,15 +369,19 @@
       `).join("");
     }
 
-    function cambiarEstado(idx, nuevoEstado) {
-      const prestadores = JSON.parse(localStorage.getItem("siancas_prestadores_db") || "[]");
-      prestadores[idx].Estado = nuevoEstado;
-      localStorage.setItem("siancas_prestadores_db", JSON.stringify(prestadores));
-      renderTablaPrestadores();
+    async function cambiarEstado(idPrestador, nuevoEstado) {
+      const p = prestadoresServidor.find(x => String(x.ID) === String(idPrestador));
+      await llamarBackend({
+        action: "cambiarEstadoPrestador",
+        idPrestador: idPrestador,
+        nuevoEstado: nuevoEstado
+      });
+      await sincronizarPanelAdminConSheets();
 
-      const p = prestadores[idx];
-      const msg = `Hola *${p.NombreNegocio}*! Desde la Administración de *SiancasGo* confirmamos que tu servicio en *${p.Localidad}* fue marcado como: *${nuevoEstado}*.`;
-      window.open(`https://wa.me/${p.WhatsApp}?text=${msg}`, "_blank");
+      if (p) {
+        const msg = `Hola *${p.NombreNegocio}*! Desde la Administración de *SiancasGo* confirmamos que tu servicio en *${p.Localidad}* fue marcado como: *${nuevoEstado}*.`;
+        window.open(`https://wa.me/${p.WhatsApp}?text=${msg}`, "_blank");
+      }
     }
 
     window.addEventListener("DOMContentLoaded", () => {

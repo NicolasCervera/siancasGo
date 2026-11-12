@@ -10,7 +10,7 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-  <!-- Barra Superior con Controles de Sesión Completos -->
+  <!-- Barra Superior con Controles de Sesión -->
   <header class="bg-emerald-900 text-white shadow-md sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
       <div>
@@ -18,16 +18,13 @@
         <p class="text-xs text-emerald-200">Güemes · Campo Santo · Cobos · El Sauce · Betania · Corredor Madre Vieja</p>
       </div>
 
-      <!-- Zona de Usuario y Botones de Sesión -->
       <div class="flex flex-wrap items-center gap-2">
         <button id="btnMisReservas" onclick="abrirModalMisReservas()" class="hidden bg-emerald-800 hover:bg-emerald-700 border border-emerald-600 px-3 py-1.5 rounded-lg text-xs font-semibold">
           📅 Mis Reservas y Chats
         </button>
 
-        <!-- Badge cuando hay sesión activa -->
         <span id="userNameDisplay" class="hidden text-xs bg-emerald-950 border border-emerald-700 px-3 py-1.5 rounded-lg font-medium"></span>
 
-        <!-- Botones cuando NO hay sesión activa -->
         <button id="btnAbrirLogin" onclick="abrirAuthModal('login')" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3.5 py-1.5 rounded-lg text-xs">
           🔑 Iniciar Sesión
         </button>
@@ -35,7 +32,6 @@
           ➕ Crear Cuenta
         </button>
 
-        <!-- Botón Cerrar Sesión cuando SÍ hay sesión activa -->
         <button id="btnCerrarSesion" onclick="cerrarSesionCliente()" class="hidden bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-xs">
           🚪 Cerrar Sesión
         </button>
@@ -45,24 +41,24 @@
 
   <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- Columna Izquierda: Mis Hojas de Ruta del Usuario + Armador de Nuevo Plan -->
+    <!-- Columna Izquierda: Hojas de Ruta del Usuario + Armador -->
     <section class="lg:col-span-5 space-y-5">
 
-      <!-- Tarjeta: Hojas de Ruta Guardadas del Usuario Conectado -->
+      <!-- Hojas de Ruta Guardadas del Usuario Conectado en Google Sheets -->
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <div class="flex justify-between items-center mb-2">
           <h2 class="text-base font-bold text-emerald-950">🗺️ Mis Hojas de Ruta Guardadas</h2>
           <span id="contadorRutasUsuario" class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full">0 rutas</span>
         </div>
-        <p class="text-xs text-slate-500 mb-3">Aquí se muestran únicamente las hojas de ruta creadas con tu cuenta de WhatsApp.</p>
+        <p class="text-xs text-slate-500 mb-3">Sincronizado en tiempo real con la hoja <strong>Planes</strong> de Google Sheets.</p>
         <div id="contenedorRutasGuardadas" class="space-y-2.5 text-xs"></div>
       </div>
 
-      <!-- Tarjeta: Armar una Nueva Hoja de Ruta -->
+      <!-- Armar Nueva Hoja de Ruta -->
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
         <div>
           <h2 class="text-lg font-bold text-emerald-950">✨ Armar Nueva Hoja de Ruta</h2>
-          <p class="text-xs text-slate-500">Completá tus preferencias y presioná el botón para calcular disponibilidad, pines y costos.</p>
+          <p class="text-xs text-slate-500">Consultamos disponibilidad y cupos reales en Google Sheets.</p>
         </div>
 
         <form id="planForm" onsubmit="generarPlanConCalendario(event)" class="space-y-3 text-sm">
@@ -131,20 +127,20 @@
             </div>
           </div>
 
-          <button type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl shadow transition text-xs sm:text-sm">
+          <button type="submit" id="btnCalcularPlan" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-3 rounded-xl shadow transition text-xs sm:text-sm">
             🧭 Calcular Disponibilidad y Trazar Pines en Mapa
           </button>
         </form>
       </div>
     </section>
 
-    <!-- Columna Derecha: Mapa con Pines de Ruta + Desglose de Paradas -->
+    <!-- Columna Derecha: Mapa con Pines de Ruta + Desglose -->
     <section class="lg:col-span-7 space-y-4">
       <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <div class="flex flex-wrap justify-between items-center border-b pb-3 mb-3 gap-2">
           <div>
             <h3 class="font-bold text-emerald-950 text-base">Mapa Interactivo de Hoja de Ruta y Turnos</h3>
-            <p id="resumenViaje" class="text-xs text-slate-500">Seleccioná una de tus rutas guardadas o generá una nueva para ver los pines en el mapa.</p>
+            <p id="resumenViaje" class="text-xs text-slate-500">Seleccioná una de tus rutas guardadas o generá una nueva.</p>
           </div>
           <span id="badgeCosto" class="bg-emerald-100 text-emerald-900 text-xs font-bold px-3 py-1.5 rounded-full">$0 ARS</span>
         </div>
@@ -152,17 +148,11 @@
         <div id="alertaMovilidad" class="hidden bg-amber-50 border border-amber-300 text-amber-900 text-xs p-3 rounded-xl mb-2"></div>
         <div id="alertaCalendario" class="hidden bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs p-3 rounded-xl mb-3 space-y-1"></div>
 
-        <!-- Mapa Google Maps Incrustado con Pines Numerados -->
         <div class="relative rounded-xl overflow-hidden border border-slate-300 h-80 mb-4 z-10">
           <div id="mapaRuta" class="w-full h-full"></div>
         </div>
 
-        <!-- Lista de Paradas de la Ruta Activa -->
-        <div id="listaActividades" class="space-y-2.5 mb-4 text-sm">
-          <div class="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">
-            Todavía no hay ninguna hoja de ruta seleccionada en pantalla. Elegí una de <strong>Mis Hojas de Ruta Guardadas</strong> o presioná <strong>Calcular Disponibilidad y Trazar Pines en Mapa</strong>.
-          </div>
-        </div>
+        <div id="listaActividades" class="space-y-2.5 mb-4 text-sm"></div>
 
         <div class="flex flex-col sm:flex-row gap-3">
           <a id="btnGoogleMapsRuta" href="https://www.google.com/maps?q=General+Guemes+Salta" target="_blank"
@@ -171,14 +161,14 @@
           </a>
           <button onclick="confirmarYGuardarPlan()" id="btnConfirmarWA" disabled
                   class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-slate-300 text-white font-bold py-2.5 rounded-xl text-xs sm:text-sm transition">
-            📲 Guardar Ruta en Mi Cuenta y Confirmar por WhatsApp
+            📲 Guardar Ruta en Google Sheets y Confirmar por WhatsApp
           </button>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- Modal de Autenticación (Iniciar Sesión / Crear Cuenta por WhatsApp) -->
+  <!-- Modal Iniciar Sesión / Crear Cuenta -->
   <div id="authModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl">
       <div class="flex gap-2 mb-4 border-b pb-3">
@@ -192,7 +182,7 @@
 
       <div id="authErrorBox" class="hidden bg-rose-50 border border-rose-300 text-rose-800 text-xs p-2.5 rounded-xl mb-3"></div>
 
-      <!-- Formulario Iniciar Sesión (SOLO WhatsApp y Contraseña) -->
+      <!-- Login: SOLO WhatsApp y Contraseña -->
       <form id="formLogin" onsubmit="ejecutarLoginCliente(event)" class="space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1">Número de WhatsApp</label>
@@ -203,24 +193,24 @@
           <input type="password" id="loginPass" placeholder="Tu contraseña" required class="w-full border rounded-lg px-3 py-2">
         </div>
         <div class="bg-slate-50 p-2.5 rounded-lg border text-[11px] text-slate-500">
-          <strong>Cuentas de prueba:</strong><br>
-          • Con ruta guardada (Martín): <strong>5493868400123</strong> / <strong>cliente123</strong><br>
-          • Sin rutas (Sofía): <strong>5493874999888</strong> / <strong>cliente123</strong>
+          <strong>Usuarios en hoja Usuarios:</strong><br>
+          • Martín (con ruta): <strong>5493868400123</strong> / <strong>cliente123</strong><br>
+          • Sofía (sin rutas): <strong>5493874999888</strong> / <strong>cliente123</strong>
         </div>
         <div class="flex gap-2 pt-2">
           <button type="button" onclick="cerrarAuthModal()" class="flex-1 bg-slate-200 py-2.5 rounded-lg font-semibold">Cancelar</button>
-          <button type="submit" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 rounded-lg font-bold">Ingresar</button>
+          <button type="submit" id="btnSubmitLogin" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 rounded-lg font-bold">Ingresar</button>
         </div>
       </form>
 
-      <!-- Formulario Crear Cuenta (SOLO Nombre Completo, WhatsApp y Contraseña) -->
+      <!-- Crear Cuenta: SOLO Nombre Completo, WhatsApp y Contraseña (Guarda en hoja 'Usuarios') -->
       <form id="formRegistro" onsubmit="ejecutarRegistroCliente(event)" class="hidden space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1">Nombre Completo</label>
           <input type="text" id="regNombre" placeholder="Ej: Juan Pérez" required class="w-full border rounded-lg px-3 py-2">
         </div>
         <div>
-          <label class="font-bold block mb-1">Número de WhatsApp (único por cuenta)</label>
+          <label class="font-bold block mb-1">Número de WhatsApp (único)</label>
           <input type="tel" id="regWA" placeholder="Ej: 5493875123456" required class="w-full border rounded-lg px-3 py-2">
         </div>
         <div>
@@ -229,19 +219,19 @@
         </div>
         <div class="flex gap-2 pt-2">
           <button type="button" onclick="cerrarAuthModal()" class="flex-1 bg-slate-200 py-2.5 rounded-lg font-semibold">Cancelar</button>
-          <button type="submit" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-lg font-bold">Crear Cuenta</button>
+          <button type="submit" id="btnSubmitReg" class="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-lg font-bold">Crear Cuenta</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal Chat Interno Persistente -->
+  <!-- Modal Chat Interno -->
   <div id="chatModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden flex flex-col h-[480px]">
       <div class="bg-emerald-900 text-white px-4 py-3 flex justify-between items-center">
         <div>
           <h4 id="chatTituloNegocio" class="font-bold text-sm">Chat con Prestador</h4>
-          <p id="chatSubtitulo" class="text-[11px] text-emerald-200">Conversación guardada en tu cuenta</p>
+          <p id="chatSubtitulo" class="text-[11px] text-emerald-200">Sincronizado con la hoja Mensajes</p>
         </div>
         <button onclick="cerrarChat()" class="text-white/80 hover:text-white text-lg font-bold">✕</button>
       </div>
@@ -265,77 +255,32 @@
   </div>
 
   <script>
-    // Reemplazá únicamente esta URL por la de tu implementación de Google Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKhqMx5LA8iyB8beyJf1qJVG04M6TVah17aerUOOgnpgATLjPBhrZq5IN6qEZ3rTbk/exec";
-    const ADMIN_WA = "5493875622260";
-    const DIAS_SEMANA = ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
+    let ADMIN_WA = "5493875622260";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
     }
 
-    // Semilla inicial sincronizada con las 6 hojas de Google Sheets
-    const USUARIOS_SEMILLA = [
-      { id: "USR-001", nombre: "Emilio Admin", whatsapp: "5493875000001", password: "admin123", rol: "admin" },
-      { id: "USR-002", nombre: "Martín Ríos", whatsapp: "5493868400123", password: "cliente123", rol: "cliente" },
-      { id: "USR-003", nombre: "Sofía López", whatsapp: "5493874999888", password: "cliente123", rol: "cliente" },
-      { id: "USR-004", nombre: "Lucía Vargas", whatsapp: "5493875112233", password: "prestador123", rol: "prestador" },
-      { id: "USR-005", nombre: "Carlos Gómez", whatsapp: "5493875445566", password: "prestador123", rol: "prestador" }
-    ];
+    async function llamarBackend(payload) {
+      const response = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await response.json();
+    }
 
-    const CATALOGO_SEMILLA = [
-      { ID: "PRE-001", IDUsuario: "USR-005", NombreNegocio: "Transfer y Combi Valle de Siancas", Rubro: "Movilidad y Traslados", Localidad: "General Güemes", CostoPromedio: 6500, AptoCompania: "Todos", Latitud: -24.6672, Longitud: -65.0485, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "08:00,09:00,11:00,14:00,16:00,18:00", CupoMaximoTurno: 15, WhatsApp: "5493875445566", Estado: "Aprobado" },
-      { ID: "PRE-004", IDUsuario: "USR-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", Rubro: "Historia y Cultura", Localidad: "Cobos", CostoPromedio: 4500, AptoCompania: "Familia, Pareja, Amigos", Latitud: -24.7431, Longitud: -65.1258, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 8, WhatsApp: "5493875112233", Estado: "Aprobado" },
-      { ID: "PRE-005", IDUsuario: "USR-004", NombreNegocio: "Museo e Historia del Azúcar e Ingenio San Isidro", Rubro: "Historia y Cultura", Localidad: "Campo Santo", CostoPromedio: 3500, AptoCompania: "Todos", Latitud: -24.6975, Longitud: -65.0910, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,15:00,17:00", CupoMaximoTurno: 15, WhatsApp: "5493875112233", Estado: "Aprobado" },
-      { ID: "PRE-003", IDUsuario: "USR-004", NombreNegocio: "Complejo Termal Aguas de El Sauce", Rubro: "Termas y Relax", Localidad: "El Sauce", CostoPromedio: 6000, AptoCompania: "Pareja, Familia, Amigos, Solo", Latitud: -24.6335, Longitud: -65.1382, DiasAtencion: "Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00,16:00", CupoMaximoTurno: 20, WhatsApp: "5493875112233", Estado: "Aprobado" },
-      { ID: "PRE-007", IDUsuario: "USR-004", NombreNegocio: "Estancia Rural Río Mojotoro y Monte", Rubro: "Rural y Naturaleza", Localidad: "Betania", CostoPromedio: 8500, AptoCompania: "Familia, Pareja, Amigos", Latitud: -24.6710, Longitud: -65.1180, DiasAtencion: "Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "09:00,11:00,14:00", CupoMaximoTurno: 10, WhatsApp: "5493875112233", Estado: "Aprobado" },
-      { ID: "PRE-006", IDUsuario: "USR-004", NombreNegocio: "Peña y Parrilla El Guardamonte", Rubro: "Gastronomía Regional", Localidad: "General Güemes", CostoPromedio: 12000, AptoCompania: "Pareja, Familia, Amigos", Latitud: -24.6645, Longitud: -65.0460, DiasAtencion: "Lun,Mar,Mie,Jue,Vie,Sab,Dom", HorariosTurnos: "12:00,13:00,20:00,21:30", CupoMaximoTurno: 30, WhatsApp: "5493875112233", Estado: "Aprobado" }
-    ];
-
-    const PLANES_SEMILLA = [
-      {
-        IDPlan: "PLN-001",
-        IDCliente: "USR-002",
-        WhatsAppCliente: "5493868400123",
-        NombreCliente: "Martín Ríos",
-        OrigenViajero: "Cafayate",
-        TieneMovilidad: "no",
-        FechaDesde: "2026-11-14",
-        FechaHasta: "2026-11-15",
-        CantidadPersonas: 2,
-        TipoCompania: "Pareja",
-        PresupuestoTotal: 90000,
-        CostoEstimado: 58000,
-        EstadoReserva: "Confirmado",
-        ItinerarioJSON: JSON.stringify([
-          { ID: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", Localidad: "General Güemes", fecha: "2026-11-14", diaSemana: "Sab", hora: "09:00", cupoRestante: 13, Latitud: -24.6672, Longitud: -65.0485, subtotal: 13000 },
-          { ID: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", Localidad: "Cobos", fecha: "2026-11-14", diaSemana: "Sab", hora: "11:00", cupoRestante: 6, Latitud: -24.7431, Longitud: -65.1258, subtotal: 9000 },
-          { ID: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", Localidad: "El Sauce", fecha: "2026-11-14", diaSemana: "Sab", hora: "16:00", cupoRestante: 18, Latitud: -24.6335, Longitud: -65.1382, subtotal: 12000 },
-          { ID: "PRE-006", NombreNegocio: "Peña y Parrilla El Guardamonte", Localidad: "General Güemes", fecha: "2026-11-14", diaSemana: "Sab", hora: "21:30", cupoRestante: 28, Latitud: -24.6645, Longitud: -65.0460, subtotal: 24000 }
-        ])
-      }
-    ];
-
-    const RESERVAS_SEMILLA = [
-      { IDReserva: "RES-001", IDPlan: "PLN-001", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", IDCliente: "USR-002", NombreCliente: "Martín Ríos", TelefonoCliente: "5493868400123", FechaServicio: "2026-11-14", HoraTurno: "09:00", CantidadPersonas: 2, Subtotal: 13000, EstadoReserva: "Confirmada" },
-      { IDReserva: "RES-002", IDPlan: "PLN-001", IDPrestador: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", IDCliente: "USR-002", NombreCliente: "Martín Ríos", TelefonoCliente: "5493868400123", FechaServicio: "2026-11-14", HoraTurno: "11:00", CantidadPersonas: 2, Subtotal: 9000, EstadoReserva: "Pendiente" },
-      { IDReserva: "RES-003", IDPlan: "PLN-001", IDPrestador: "PRE-003", NombreNegocio: "Complejo Termal Aguas de El Sauce", IDCliente: "USR-002", NombreCliente: "Martín Ríos", TelefonoCliente: "5493868400123", FechaServicio: "2026-11-14", HoraTurno: "16:00", CantidadPersonas: 2, Subtotal: 12000, EstadoReserva: "Confirmada" },
-      { IDReserva: "RES-004", IDPlan: "PLN-000", IDPrestador: "PRE-004", NombreNegocio: "Visita Guiada y Cabalgata Fuerte de Cobos", IDCliente: "USR-099", NombreCliente: "Contingente Escolar", TelefonoCliente: "5493875999999", FechaServicio: "2026-11-16", HoraTurno: "11:00", CantidadPersonas: 8, Subtotal: 36000, EstadoReserva: "Confirmada" }
-    ];
-
-    const MENSAJES_SEMILLA = [
-      { IDMensaje: "MSG-001", IDReserva: "RES-001", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", EmisorRol: "cliente", TextoMensaje: "Hola Carlos! Nuestro colectivo desde Cafayate llega 08:50 a la terminal de Güemes, ¿nos esperan ahí?", FechaHora: "2026-11-12 10:15" },
-      { IDMensaje: "MSG-002", IDReserva: "RES-001", IDCliente: "USR-002", NombreCliente: "Martín Ríos", IDPrestador: "PRE-001", NombreNegocio: "Transfer y Combi Valle de Siancas", EmisorRol: "prestador", TextoMensaje: "¡Hola Martín! Sí, quédate tranquilo que la combi blanca va a estar estacionada en dársena 2 esperándolos.", FechaHora: "2026-11-12 10:18" }
-    ];
-
-    if (!localStorage.getItem("siancas_usuarios_db")) localStorage.setItem("siancas_usuarios_db", JSON.stringify(USUARIOS_SEMILLA));
-    if (!localStorage.getItem("siancas_planes_db")) localStorage.setItem("siancas_planes_db", JSON.stringify(PLANES_SEMILLA));
-    if (!localStorage.getItem("siancas_reservas")) localStorage.setItem("siancas_reservas", JSON.stringify(RESERVAS_SEMILLA));
-    if (!localStorage.getItem("siancas_chat_history")) localStorage.setItem("siancas_chat_history", JSON.stringify(MENSAJES_SEMILLA));
+    // Limpiar bases locales viejas para que nunca interfieran con Google Sheets
+    localStorage.removeItem("siancas_usuarios_db");
+    localStorage.removeItem("siancas_planes_db");
+    localStorage.removeItem("siancas_reservas");
 
     let map = null;
     let routeLayerGroup = null;
     let planActual = null;
+    let misPlanesServidor = [];
+    let misReservasServidor = [];
     let chatContext = null;
 
     function initMapa() {
@@ -347,7 +292,6 @@
       routeLayerGroup = L.layerGroup().addTo(map);
     }
 
-    // Limpia la pantalla de ruta cuando se cambia de usuario o se cierra sesión
     function limpiarPantallaDeRuta() {
       planActual = null;
       if (routeLayerGroup) routeLayerGroup.clearLayers();
@@ -359,49 +303,63 @@
       document.getElementById("btnConfirmarWA").disabled = true;
       document.getElementById("listaActividades").innerHTML = `
         <div class="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-300 text-xs text-slate-500">
-          No hay ninguna ruta cargada en el visor. Si tenés hojas de ruta guardadas en tu cuenta podés abrirlas desde el panel izquierdo, o usar el formulario para armar una nueva.
+          No hay ninguna hoja de ruta seleccionada en el visor. Elegí una de <strong>Mis Hojas de Ruta Guardadas</strong> o presioná <strong>Calcular Disponibilidad y Trazar Pines en Mapa</strong>.
         </div>
       `;
     }
 
-    // Carga únicamente las hojas de ruta que pertenecen al usuario activo
-    function renderizarHojasDeRutaDelUsuario() {
+    async function sincronizarDatosDelClienteConSheets() {
       const user = JSON.parse(localStorage.getItem("siancas_cliente_sesion") || "null");
       const cont = document.getElementById("contenedorRutasGuardadas");
       const badge = document.getElementById("contadorRutasUsuario");
 
       if (!user) {
+        misPlanesServidor = [];
+        misReservasServidor = [];
         badge.textContent = "Sin sesión";
         cont.innerHTML = `
           <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
-            Iniciá sesión con tu número de WhatsApp o creá tu cuenta para ver tus hojas de ruta guardadas.
+            Iniciá sesión con tu número de WhatsApp o creá tu cuenta para consultar tus hojas de ruta en Google Sheets.
           </div>
         `;
         return;
       }
 
-      const todosLosPlanes = JSON.parse(localStorage.getItem("siancas_planes_db") || "[]");
-      const misPlanes = todosLosPlanes.filter(p =>
-        p.IDCliente === user.id || normalizarWA(p.WhatsAppCliente) === normalizarWA(user.whatsapp)
-      );
+      cont.innerHTML = `<div class="p-3 text-slate-500">🔄 Consultando tus hojas de ruta en Google Sheets...</div>`;
 
-      badge.textContent = `${misPlanes.length} ruta(s)`;
+      try {
+        const res = await llamarBackend({
+          action: "obtenerDatosCliente",
+          idCliente: user.id,
+          whatsapp: user.whatsapp
+        });
 
-      if (misPlanes.length === 0) {
+        if (res.ok) {
+          misPlanesServidor = res.planes || [];
+          misReservasServidor = res.reservas || [];
+        }
+      } catch (err) {
+        cont.innerHTML = `<div class="p-3 text-rose-700 bg-rose-50 rounded-xl">⚠️ Error al conectar con Google Sheets. Verificá haber publicado una Nueva Versión en Apps Script.</div>`;
+        return;
+      }
+
+      badge.textContent = `${misPlanesServidor.length} ruta(s)`;
+
+      if (misPlanesServidor.length === 0) {
         cont.innerHTML = `
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-500">
-            Hola <strong>${user.nombre}</strong>, todavía no tenés hojas de ruta guardadas en tu cuenta. ¡Armá tu primer recorrido abajo!
+            Hola <strong>${user.nombre}</strong>, no tenés hojas de ruta registradas en Google Sheets. ¡Armá tu primera ruta abajo!
           </div>
         `;
         return;
       }
 
-      cont.innerHTML = misPlanes.map((p, idx) => `
+      cont.innerHTML = misPlanesServidor.map(p => `
         <div class="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200 flex justify-between items-center gap-2">
           <div>
             <span class="font-bold text-emerald-950">${p.IDPlan} · Origen: ${p.OrigenViajero}</span>
             <p class="text-[11px] text-slate-600">📅 ${p.FechaDesde} al ${p.FechaHasta} · ${p.CantidadPersonas} pers. (${p.TipoCompania})</p>
-            <span class="text-xs font-bold text-emerald-800">Total: $${Number(p.CostoEstimado).toLocaleString("es-AR")} ARS</span>
+            <span class="text-xs font-bold text-emerald-800">Total: $${Number(p.CostoEstimado || 0).toLocaleString("es-AR")} ARS</span>
           </div>
           <button onclick="cargarPlanGuardadoEnMapa('${p.IDPlan}')" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs">
             🗺️ Ver Ruta
@@ -411,11 +369,14 @@
     }
 
     function cargarPlanGuardadoEnMapa(idPlan) {
-      const todosLosPlanes = JSON.parse(localStorage.getItem("siancas_planes_db") || "[]");
-      const plan = todosLosPlanes.find(p => p.IDPlan === idPlan);
+      const plan = misPlanesServidor.find(p => String(p.IDPlan) === String(idPlan));
       if (!plan) return;
 
-      const items = typeof plan.ItinerarioJSON === "string" ? JSON.parse(plan.ItinerarioJSON) : plan.ItinerarioJSON;
+      let items = [];
+      try {
+        items = typeof plan.ItinerarioJSON === "string" ? JSON.parse(plan.ItinerarioJSON) : plan.ItinerarioJSON;
+      } catch (e) { items = []; }
+
       planActual = {
         idPlan: plan.IDPlan,
         origen: plan.OrigenViajero,
@@ -426,13 +387,23 @@
         personas: Number(plan.CantidadPersonas),
         presupuesto: Number(plan.PresupuestoTotal),
         costoAcumulado: Number(plan.CostoEstimado),
-        items: items,
-        avisosCalendario: [`📂 Mostrando tu hoja de ruta guardada (${plan.IDPlan}).`]
+        items: items.map(it => ({
+          ID: it.ID || it.id,
+          NombreNegocio: it.NombreNegocio || it.nombre,
+          Localidad: it.Localidad || it.localidad,
+          fecha: it.fecha,
+          diaSemana: it.diaSemana || "",
+          hora: it.hora,
+          Latitud: Number(it.Latitud || it.lat || -24.6672),
+          Longitud: Number(it.Longitud || it.lng || -65.0485),
+          subtotal: Number(it.subtotal || 0)
+        })),
+        avisosCalendario: [`📂 Mostrando tu hoja de ruta guardada en Google Sheets (${plan.IDPlan}).`]
       };
       renderizarPlanYMapa();
     }
 
-    // GESTIÓN DE SESIÓN (LOGIN Y ALTA SOLO CON WHATSAPP Y CONTRASEÑA)
+    // LOGIN Y REGISTRO EN TIEMPO REAL CONTRA LA HOJA 'Usuarios'
     function abrirAuthModal(modo) {
       document.getElementById("authErrorBox").classList.add("hidden");
       document.getElementById("authModal").classList.remove("hidden");
@@ -470,19 +441,33 @@
       e.preventDefault();
       const wa = normalizarWA(document.getElementById("loginWA").value);
       const pass = document.getElementById("loginPass").value.trim();
+      const btn = document.getElementById("btnSubmitLogin");
+      btn.disabled = true;
+      btn.textContent = "Verificando...";
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      const encontrado = usuarios.find(u => normalizarWA(u.whatsapp) === wa && u.password === pass);
+      try {
+        const res = await llamarBackend({
+          action: "login",
+          whatsapp: wa,
+          password: pass,
+          rolRequerido: "cliente"
+        });
 
-      if (!encontrado) {
-        mostrarErrorAuth("❌ Número de WhatsApp o contraseña incorrectos.");
-        return;
+        if (!res.ok) {
+          mostrarErrorAuth("❌ " + (res.error || "Credenciales inválidas."));
+          return;
+        }
+
+        localStorage.setItem("siancas_cliente_sesion", JSON.stringify(res.usuario));
+        cerrarAuthModal();
+        limpiarPantallaDeRuta();
+        await actualizarUIUsuario();
+      } catch (err) {
+        mostrarErrorAuth("⚠️ Error de red al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Ingresar";
       }
-
-      localStorage.setItem("siancas_cliente_sesion", JSON.stringify(encontrado));
-      cerrarAuthModal();
-      limpiarPantallaDeRuta();
-      actualizarUIUsuario();
     }
 
     async function ejecutarRegistroCliente(e) {
@@ -496,37 +481,34 @@
         return;
       }
 
-      const usuarios = JSON.parse(localStorage.getItem("siancas_usuarios_db") || "[]");
-      const yaExiste = usuarios.some(u => normalizarWA(u.whatsapp) === wa);
-
-      if (yaExiste) {
-        mostrarErrorAuth("🚫 Ese número de celular (" + wa + ") ya está registrado. No se puede crear la cuenta; usá Iniciar Sesión.");
-        return;
-      }
-
-      const nuevoUsuario = {
-        id: "USR-" + String(usuarios.length + 1).padStart(3, "0"),
-        nombre: nombre,
-        whatsapp: wa,
-        password: pass,
-        rol: "cliente"
-      };
-
-      usuarios.push(nuevoUsuario);
-      localStorage.setItem("siancas_usuarios_db", JSON.stringify(usuarios));
-      localStorage.setItem("siancas_cliente_sesion", JSON.stringify(nuevoUsuario));
+      const btn = document.getElementById("btnSubmitReg");
+      btn.disabled = true;
+      btn.textContent = "Guardando en Sheets...";
 
       try {
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "registro", nombre: nombre, whatsapp: wa, password: pass, rol: "cliente" })
+        const res = await llamarBackend({
+          action: "registro",
+          nombre: nombre,
+          whatsapp: wa,
+          password: pass,
+          rol: "cliente"
         });
-      } catch (err) {}
 
-      cerrarAuthModal();
-      limpiarPantallaDeRuta();
-      actualizarUIUsuario();
+        if (!res.ok) {
+          mostrarErrorAuth("🚫 " + (res.error || "No se pudo registrar el usuario."));
+          return;
+        }
+
+        localStorage.setItem("siancas_cliente_sesion", JSON.stringify(res.usuario));
+        cerrarAuthModal();
+        limpiarPantallaDeRuta();
+        await actualizarUIUsuario();
+      } catch (err) {
+        mostrarErrorAuth("⚠️ Error al conectar con Google Apps Script.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Crear Cuenta";
+      }
     }
 
     function cerrarSesionCliente() {
@@ -535,7 +517,7 @@
       actualizarUIUsuario();
     }
 
-    function actualizarUIUsuario() {
+    async function actualizarUIUsuario() {
       const saved = JSON.parse(localStorage.getItem("siancas_cliente_sesion") || "null");
       const badge = document.getElementById("userNameDisplay");
       const btnLogin = document.getElementById("btnAbrirLogin");
@@ -557,120 +539,56 @@
         btnLogin.classList.remove("hidden");
         btnReg.classList.remove("hidden");
       }
-      renderizarHojasDeRutaDelUsuario();
+      await sincronizarDatosDelClienteConSheets();
     }
 
-    // MOTOR DE DISPONIBILIDAD Y MAPA CON PINES
-    function obtenerFechasRango(desde, hasta) {
-      const arr = [];
-      let cur = new Date(desde + "T12:00:00");
-      const end = new Date((hasta || desde) + "T12:00:00");
-      while (cur <= end && arr.length < 14) {
-        arr.push(cur.toISOString().slice(0, 10));
-        cur.setDate(cur.getDate() + 1);
-      }
-      return arr.length ? arr : [desde];
-    }
-
-    function evaluarDisponibilidadLocal(prestador, fechas, horaPref, personas) {
-      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      const diasHabiles = prestador.DiasAtencion.split(",").map(d => d.trim());
-      const turnos = prestador.HorariosTurnos.split(",").map(h => h.trim().slice(0, 5));
-      const cupoMax = Number(prestador.CupoMaximoTurno);
-
-      const candidatos = [horaPref, ...turnos.filter(t => t !== horaPref)].filter(t => turnos.includes(t));
-      const listaTurnos = candidatos.length > 0 ? candidatos : turnos;
-      const alertas = [];
-
-      for (let f = 0; f < fechas.length; f++) {
-        const fechaStr = fechas[f];
-        const dObj = new Date(fechaStr + "T12:00:00");
-        const diaNombre = DIAS_SEMANA[dObj.getDay()];
-
-        if (!diasHabiles.includes(diaNombre)) {
-          alertas.push(`📅 <strong>${prestador.NombreNegocio}</strong> permanece cerrado los días <strong>${diaNombre}</strong> (${fechaStr}).`);
-          continue;
-        }
-
-        for (let t = 0; t < listaTurnos.length; t++) {
-          const hora = listaTurnos[t];
-          const ocupados = reservas
-            .filter(r => r.IDPrestador === prestador.ID && r.FechaServicio === fechaStr && r.HoraTurno.slice(0, 5) === hora && r.EstadoReserva !== "Cancelada")
-            .reduce((acc, r) => acc + Number(r.CantidadPersonas), 0);
-
-          if (ocupados + personas <= cupoMax) {
-            const reasignado = (hora !== horaPref || f > 0);
-            if (reasignado) {
-              alertas.push(`🔄 <strong>${prestador.NombreNegocio}:</strong> asignado al <strong>${diaNombre} ${fechaStr} a las ${hora} hs</strong> (${cupoMax - ocupados} lugares disponibles).`);
-            }
-            return {
-              disponible: true,
-              fecha: fechaStr,
-              diaSemana: diaNombre,
-              hora: hora,
-              cupoRestante: cupoMax - (ocupados + personas),
-              alertas: alertas
-            };
-          } else {
-            alertas.push(`⚠️ <strong>${prestador.NombreNegocio}:</strong> el turno del ${diaNombre} ${fechaStr} a las <strong>${hora} hs está COMPLETO</strong> (${ocupados}/${cupoMax} lugares).`);
-          }
-        }
-      }
-      return { disponible: false, alertas: alertas };
-    }
-
-    function generarPlanConCalendario(e) {
+    // GENERAR PLAN EN VIVO CONSULTANDO DISPONIBILIDAD EN GOOGLE SHEETS
+    async function generarPlanConCalendario(e) {
       if (e) e.preventDefault();
-      const origen = document.getElementById("origen").value;
-      const movilidad = document.getElementById("movilidad").value;
-      const fechaDesde = document.getElementById("fechaDesde").value;
-      const fechaHasta = document.getElementById("fechaHasta").value;
-      const horaPreferida = document.getElementById("horaPreferida").value;
-      const compania = document.getElementById("compania").value;
-      const personas = parseInt(document.getElementById("personas").value, 10);
-      const presupuesto = parseFloat(document.getElementById("presupuesto").value);
-      const intereses = Array.from(document.querySelectorAll(".interes:checked")).map(i => i.value);
+      const btn = document.getElementById("btnCalcularPlan");
+      btn.disabled = true;
+      btn.textContent = "🔄 Verificando disponibilidad en Google Sheets...";
 
-      const fechas = obtenerFechasRango(fechaDesde, fechaHasta);
-      let costoAcumulado = 0;
-      const items = [];
-      let avisosCalendario = [];
+      const payload = {
+        action: "generarPlan",
+        origen: document.getElementById("origen").value,
+        movilidad: document.getElementById("movilidad").value,
+        fechaDesde: document.getElementById("fechaDesde").value,
+        fechaHasta: document.getElementById("fechaHasta").value,
+        horaPreferida: document.getElementById("horaPreferida").value,
+        compania: document.getElementById("compania").value,
+        personas: parseInt(document.getElementById("personas").value, 10),
+        presupuesto: parseFloat(document.getElementById("presupuesto").value),
+        intereses: Array.from(document.querySelectorAll(".interes:checked")).map(i => i.value)
+      };
 
-      const alertaMov = document.getElementById("alertaMovilidad");
-      if (movilidad === "no") {
-        const trans = CATALOGO_SEMILLA.find(x => x.Rubro === "Movilidad y Traslados");
-        const disp = evaluarDisponibilidadLocal(trans, fechas, "09:00", personas);
-        if (disp.disponible) {
-          const sub = trans.CostoPromedio * personas;
-          costoAcumulado += sub;
-          items.push({ ...trans, fecha: disp.fecha, diaSemana: disp.diaSemana, hora: disp.hora, cupoRestante: disp.cupoRestante, subtotal: sub });
-          alertaMov.classList.remove("hidden");
-          alertaMov.innerHTML = `🚐 <strong>Movilidad incluida:</strong> Para tu llegada desde <strong>${origen}</strong> sin vehículo, reservamos <strong>${trans.NombreNegocio}</strong> el ${disp.diaSemana} ${disp.fecha} (${disp.hora} hs) por $${sub.toLocaleString("es-AR")}.`;
+      try {
+        const res = await llamarBackend(payload);
+        if (res.ok) {
+          planActual = res;
+          renderizarPlanYMapa();
         }
-      } else {
-        alertaMov.classList.add("hidden");
+      } catch (err) {
+        alert("Error al consultar disponibilidad en Google Sheets.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🧭 Calcular Disponibilidad y Trazar Pines en Mapa";
       }
-
-      CATALOGO_SEMILLA.filter(x => x.Rubro !== "Movilidad y Traslados" && intereses.includes(x.Rubro)).forEach(exp => {
-        const disp = evaluarDisponibilidadLocal(exp, fechas, horaPreferida, personas);
-        avisosCalendario = avisosCalendario.concat(disp.alertas);
-        if (disp.disponible) {
-          const sub = exp.CostoPromedio * personas;
-          if (costoAcumulado + sub <= presupuesto) {
-            costoAcumulado += sub;
-            items.push({ ...exp, fecha: disp.fecha, diaSemana: disp.diaSemana, hora: disp.hora, cupoRestante: disp.cupoRestante, subtotal: sub });
-          }
-        }
-      });
-
-      planActual = { origen, movilidad, fechaDesde, fechaHasta, horaPreferida, compania, personas, presupuesto, costoAcumulado, items, avisosCalendario };
-      renderizarPlanYMapa();
     }
 
     function renderizarPlanYMapa() {
-      document.getElementById("badgeCosto").textContent = `Total: $${planActual.costoAcumulado.toLocaleString("es-AR")} ARS`;
+      document.getElementById("badgeCosto").textContent = `Total: $${Number(planActual.costoAcumulado || 0).toLocaleString("es-AR")} ARS`;
       document.getElementById("resumenViaje").textContent =
         `Fechas: ${planActual.fechaDesde} al ${planActual.fechaHasta} · ${planActual.personas} pers. (${planActual.compania})`;
+
+      const alertaMov = document.getElementById("alertaMovilidad");
+      const transItem = (planActual.items || []).find(x => String(x.Rubro || "").toLowerCase().indexOf("movilidad") !== -1);
+      if (planActual.movilidad === "no" && transItem) {
+        alertaMov.classList.remove("hidden");
+        alertaMov.innerHTML = `🚐 <strong>Movilidad incluida:</strong> Para tu llegada desde <strong>${planActual.origen}</strong> sin vehículo, asignamos <strong>${transItem.NombreNegocio}</strong> el ${transItem.fecha} (${transItem.hora} hs) por $${Number(transItem.subtotal).toLocaleString("es-AR")}.`;
+      } else {
+        alertaMov.classList.add("hidden");
+      }
 
       const boxCal = document.getElementById("alertaCalendario");
       if (planActual.avisosCalendario && planActual.avisosCalendario.length > 0) {
@@ -682,7 +600,7 @@
       }
 
       const cont = document.getElementById("listaActividades");
-      cont.innerHTML = planActual.items.map((it, idx) => `
+      cont.innerHTML = (planActual.items || []).map((it, idx) => `
         <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
           <div>
             <div class="flex items-center gap-2">
@@ -706,7 +624,7 @@
       routeLayerGroup.clearLayers();
       const coordsRuta = [];
 
-      planActual.items.forEach((it, idx) => {
+      (planActual.items || []).forEach((it, idx) => {
         const latlng = [Number(it.Latitud), Number(it.Longitud)];
         coordsRuta.push(latlng);
 
@@ -737,7 +655,7 @@
         map.setView(coordsRuta[0], 14);
       }
 
-      document.getElementById("btnConfirmarWA").disabled = planActual.items.length === 0;
+      document.getElementById("btnConfirmarWA").disabled = !planActual.items || planActual.items.length === 0;
     }
 
     function centrarPin(idx) {
@@ -753,75 +671,42 @@
         return;
       }
 
-      const planesDB = JSON.parse(localStorage.getItem("siancas_planes_db") || "[]");
-      const nuevoIdPlan = "PLN-" + String(planesDB.length + 1).padStart(3, "0");
-
-      planesDB.push({
-        IDPlan: nuevoIdPlan,
-        IDCliente: user.id,
-        WhatsAppCliente: user.whatsapp,
-        NombreCliente: user.nombre,
-        OrigenViajero: planActual.origen,
-        TieneMovilidad: planActual.movilidad,
-        FechaDesde: planActual.fechaDesde,
-        FechaHasta: planActual.fechaHasta,
-        CantidadPersonas: planActual.personas,
-        TipoCompania: planActual.compania,
-        PresupuestoTotal: planActual.presupuesto,
-        CostoEstimado: planActual.costoAcumulado,
-        EstadoReserva: "Confirmado",
-        ItinerarioJSON: JSON.stringify(planActual.items)
-      });
-      localStorage.setItem("siancas_planes_db", JSON.stringify(planesDB));
-
-      const reservasGuardadas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]");
-      planActual.items.forEach(it => {
-        reservasGuardadas.push({
-          IDReserva: "RES-" + String(reservasGuardadas.length + 1).padStart(3, "0"),
-          IDPlan: nuevoIdPlan,
-          IDPrestador: it.ID,
-          NombreNegocio: it.NombreNegocio,
-          IDCliente: user.id,
-          NombreCliente: user.nombre,
-          TelefonoCliente: user.whatsapp,
-          FechaServicio: it.fecha,
-          HoraTurno: it.hora,
-          CantidadPersonas: planActual.personas,
-          Subtotal: it.subtotal,
-          EstadoReserva: "Pendiente"
-        });
-      });
-      localStorage.setItem("siancas_reservas", JSON.stringify(reservasGuardadas));
-      renderizarHojasDeRutaDelUsuario();
+      const btn = document.getElementById("btnConfirmarWA");
+      btn.disabled = true;
+      btn.textContent = "Guardando en Google Sheets...";
 
       try {
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "confirmarReservasPlan",
-            idCliente: user.id,
-            nombreCliente: user.nombre,
-            whatsappCliente: user.whatsapp,
-            ...planActual
-          })
+        const res = await llamarBackend({
+          action: "confirmarReservasPlan",
+          idCliente: user.id,
+          nombreCliente: user.nombre,
+          whatsappCliente: user.whatsapp,
+          ...planActual
         });
-      } catch (e) {}
 
-      const detalle = planActual.items.map((i, idx) =>
-        `${idx + 1}. *${i.NombreNegocio}* (${i.Localidad}) - ${i.fecha} ${i.hora} hs ($${i.subtotal})`
-      ).join("%0A");
+        await sincronizarDatosDelClienteConSheets();
 
-      const msg = `Hola! Soy *${user.nombre}* (WhatsApp: ${user.whatsapp}) y confirmo mi plan *${nuevoIdPlan}* en *SiancasGo*:%0A` +
-                  `📅 Fechas: ${planActual.fechaDesde} al ${planActual.fechaHasta}%0A` +
-                  `📍 Origen: ${planActual.origen}%0A` +
-                  `👥 Grupo: ${planActual.personas} personas (${planActual.compania})%0A` +
-                  `💰 Total: $${planActual.costoAcumulado}%0A%0A*Turnos Reservados:*%0A${detalle}`;
-      window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, "_blank");
+        const idPlanCreado = res.idPlan || "PLN-NUEVO";
+        const detalle = planActual.items.map((i, idx) =>
+          `${idx + 1}. *${i.NombreNegocio}* (${i.Localidad}) - ${i.fecha} ${i.hora} hs ($${i.subtotal})`
+        ).join("%0A");
+
+        const msg = `Hola! Soy *${user.nombre}* (WhatsApp: ${user.whatsapp}) y confirmo mi plan *${idPlanCreado}* en *SiancasGo*:%0A` +
+                    `📅 Fechas: ${planActual.fechaDesde} al ${planActual.fechaHasta}%0A` +
+                    `📍 Origen: ${planActual.origen}%0A` +
+                    `👥 Grupo: ${planActual.personas} personas (${planActual.compania})%0A` +
+                    `💰 Total: $${planActual.costoAcumulado}%0A%0A*Turnos Reservados:*%0A${detalle}`;
+        window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, "_blank");
+      } catch (e) {
+        alert("Error al guardar el plan en Google Sheets.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "📲 Guardar Ruta en Google Sheets y Confirmar por WhatsApp";
+      }
     }
 
-    // CHAT CON MEMORIA POR USUARIO
-    function abrirChatConPrestador(idPrestador, nombreNegocio, idReserva) {
+    // CHAT CON MEMORIA EN HOJA 'Mensajes'
+    async function abrirChatConPrestador(idPrestador, nombreNegocio, idReserva) {
       const user = JSON.parse(localStorage.getItem("siancas_cliente_sesion") || "null");
       if (!user) {
         abrirAuthModal("login");
@@ -838,7 +723,7 @@
       document.getElementById("chatSubtitulo").textContent = `Usuario: ${user.nombre} (${user.whatsapp})`;
       document.getElementById("chatModal").classList.remove("hidden");
       document.getElementById("chatModal").classList.add("flex");
-      renderizarMensajesChat();
+      await cargarMensajesDesdeSheets();
     }
 
     function cerrarChat() {
@@ -846,77 +731,76 @@
       document.getElementById("chatModal").classList.remove("flex");
     }
 
-    function renderizarMensajesChat() {
+    async function cargarMensajesDesdeSheets() {
       if (!chatContext) return;
-      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
-      const conv = historial.filter(m =>
-        m.IDPrestador === chatContext.idPrestador && m.IDCliente === chatContext.idCliente
-      );
-
       const box = document.getElementById("chatMensajesBox");
-      if (conv.length === 0) {
-        box.innerHTML = `<p class="text-slate-400 text-center my-8">Iniciá tu conversación con <strong>${chatContext.nombreNegocio}</strong>.</p>`;
-        return;
-      }
+      box.innerHTML = `<p class="text-slate-400 text-center my-8">Cargando conversación desde Google Sheets...</p>`;
 
-      box.innerHTML = conv.map(m => {
-        const esMio = m.EmisorRol === "cliente";
-        return `
-          <div class="flex ${esMio ? 'justify-end' : 'justify-start'}">
-            <div class="max-w-[80%] rounded-2xl px-3.5 py-2 ${esMio ? 'bg-emerald-700 text-white' : 'bg-white border border-slate-200 text-slate-800'}">
-              <div class="text-[10px] opacity-75 font-semibold mb-0.5">${esMio ? 'Vos' : m.NombreNegocio} · ${m.FechaHora}</div>
-              <div>${m.TextoMensaje}</div>
+      try {
+        const res = await llamarBackend({
+          action: "obtenerMensajes",
+          idPrestador: chatContext.idPrestador,
+          idCliente: chatContext.idCliente
+        });
+        const conv = res.mensajes || [];
+        if (conv.length === 0) {
+          box.innerHTML = `<p class="text-slate-400 text-center my-8">Iniciá tu conversación con <strong>${chatContext.nombreNegocio}</strong>.</p>`;
+          return;
+        }
+        box.innerHTML = conv.map(m => {
+          const esMio = String(m.EmisorRol).toLowerCase() === "cliente";
+          return `
+            <div class="flex ${esMio ? 'justify-end' : 'justify-start'}">
+              <div class="max-w-[80%] rounded-2xl px-3.5 py-2 ${esMio ? 'bg-emerald-700 text-white' : 'bg-white border border-slate-200 text-slate-800'}">
+                <div class="text-[10px] opacity-75 font-semibold mb-0.5">${esMio ? 'Vos' : m.NombreNegocio} · ${m.FechaHora}</div>
+                <div>${m.TextoMensaje}</div>
+              </div>
             </div>
-          </div>
-        `;
-      }).join("");
-      box.scrollTop = box.scrollHeight;
+          `;
+        }).join("");
+        box.scrollTop = box.scrollHeight;
+      } catch (e) {
+        box.innerHTML = `<p class="text-rose-600 text-center my-8">Error al cargar mensajes.</p>`;
+      }
     }
 
-    function enviarMensajeCliente(e) {
+    async function enviarMensajeCliente(e) {
       e.preventDefault();
       const input = document.getElementById("chatInputTexto");
       const texto = input.value.trim();
       if (!texto || !chatContext) return;
-
-      const ahora = new Date().toISOString().slice(0, 16).replace("T", " ");
-      const nuevoMsg = {
-        IDMensaje: "MSG-" + Date.now().toString().slice(-4),
-        IDReserva: chatContext.idReserva,
-        IDCliente: chatContext.idCliente,
-        NombreCliente: chatContext.nombreCliente,
-        IDPrestador: chatContext.idPrestador,
-        NombreNegocio: chatContext.nombreNegocio,
-        EmisorRol: "cliente",
-        TextoMensaje: texto,
-        FechaHora: ahora
-      };
-
-      const historial = JSON.parse(localStorage.getItem("siancas_chat_history") || "[]");
-      historial.push(nuevoMsg);
-      localStorage.setItem("siancas_chat_history", JSON.stringify(historial));
       input.value = "";
-      renderizarMensajesChat();
+
+      await llamarBackend({
+        action: "enviarMensaje",
+        idReserva: chatContext.idReserva,
+        idCliente: chatContext.idCliente,
+        nombreCliente: chatContext.nombreCliente,
+        idPrestador: chatContext.idPrestador,
+        nombreNegocio: chatContext.nombreNegocio,
+        emisorRol: "cliente",
+        textoMensaje: texto
+      });
+      await cargarMensajesDesdeSheets();
     }
 
-    function abrirModalMisReservas() {
+    async function abrirModalMisReservas() {
       const user = JSON.parse(localStorage.getItem("siancas_cliente_sesion") || "null");
       if (!user) {
         abrirAuthModal("login");
         return;
       }
-      const reservas = JSON.parse(localStorage.getItem("siancas_reservas") || "[]")
-        .filter(r => r.IDCliente === user.id || normalizarWA(r.TelefonoCliente) === normalizarWA(user.whatsapp));
+      await sincronizarDatosDelClienteConSheets();
 
       const cont = document.getElementById("listaMisReservas");
-      if (reservas.length === 0) {
-        cont.innerHTML = `<p class="text-slate-400 text-center py-6">No tenés reservas activas asociadas a tu cuenta (${user.whatsapp}).</p>`;
+      if (misReservasServidor.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 text-center py-6">No tenés reservas registradas en Google Sheets (${user.whatsapp}).</p>`;
       } else {
-        cont.innerHTML = reservas.map(r => `
+        cont.innerHTML = misReservasServidor.map(r => `
           <div class="p-3 rounded-xl bg-slate-50 border flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div>
               <span class="text-[11px] font-bold px-2 py-0.5 rounded ${r.EstadoReserva === 'Confirmada' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.EstadoReserva}</span>
-              <span class="text-xs font-semibold text-slate-500 ml-1">${r.IDReserva} · 📅 ${r.FechaServicio} a las ${r.HoraTurno.slice(0,5)} hs</span>
+              <span class="text-xs font-semibold text-slate-500 ml-1">${r.IDReserva} · 📅 ${r.FechaServicio} a las ${String(r.HoraTurno).slice(0,5)} hs</span>
               <h4 class="font-bold text-slate-900 mt-1">${r.NombreNegocio} (${r.CantidadPersonas} pers. - $${Number(r.Subtotal).toLocaleString("es-AR")})</h4>
             </div>
             <button onclick="cerrarModalMisReservas(); abrirChatConPrestador('${r.IDPrestador}', '${r.NombreNegocio}', '${r.IDReserva}')"
