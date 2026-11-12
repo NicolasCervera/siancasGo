@@ -244,11 +244,16 @@
   </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxq6VfxTusE_D2pERfzsEnOrdE6c9RV4ZyPmeLODftAeDLNmoQSv5qitJ4R9pjntvbT/exec";
     const ADMIN_WA = "5493875622260";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
+    }
+
+    function parseCoord(v, def) {
+      const n = parseFloat(String(v !== undefined && v !== null ? v : "").replace(",", "."));
+      return isFinite(n) ? n : def;
     }
 
     async function llamarBackend(payload) {
@@ -276,7 +281,7 @@
     let misNegociosServidor = [];
     let misReservasServidor = [];
     let misMensajesServidor = [];
-    let clienteActivoChat = { idCliente: "USR-002", nombreCliente: "Martín Ríos", idReserva: "RES-001" };
+    let clienteActivoChat = null;
 
     function cambiarTabAuthPrestador(modo) {
       document.getElementById("errorPrestadorAuth").classList.add("hidden");
@@ -333,6 +338,12 @@
       const nombre = document.getElementById("pRegNombre").value.trim();
       const wa = normalizarWA(document.getElementById("pRegWA").value);
       const pass = document.getElementById("pRegPass").value.trim();
+
+      if (wa.length < 6) {
+        mostrarErrorP("⚠️ Ingresá un número de WhatsApp válido.");
+        return;
+      }
+
       const btn = document.getElementById("btnSubmitRegP");
       btn.disabled = true;
       btn.textContent = "Guardando en Sheets...";
@@ -404,6 +415,12 @@
         whatsapp: sesion.whatsapp
       });
 
+      if (!res.ok) {
+        document.getElementById("contenedorReservasPrestador").innerHTML =
+          `<p class="text-xs text-rose-600">⚠️ ${res.error || "Error al consultar Google Sheets."}</p>`;
+        return;
+      }
+
       misNegociosServidor = res.negocios || [];
       misReservasServidor = res.reservas || [];
       misMensajesServidor = res.mensajes || [];
@@ -419,16 +436,34 @@
       }
 
       sel.innerHTML = misNegociosServidor.map(n => `<option value="${n.ID}">${n.NombreNegocio} (${n.Localidad})</option>`).join("");
+      sincronizarInputsCalendarioNegocioActivo();
       renderizarReservasPrestador();
     }
 
     function obtenerNegocioActual() {
       const sel = document.getElementById("selectorMiNegocio");
       if (!sel || !sel.value) return null;
-      return { id: sel.value, nombre: sel.options[sel.selectedIndex].text };
+      const obj = misNegociosServidor.find(n => String(n.ID) === String(sel.value));
+      return {
+        id: sel.value,
+        nombre: obj ? obj.NombreNegocio : sel.options[sel.selectedIndex].text,
+        datos: obj || null
+      };
+    }
+
+    function sincronizarInputsCalendarioNegocioActivo() {
+      const neg = obtenerNegocioActual();
+      if (!neg || !neg.datos) return;
+      const diasActivos = String(neg.datos.DiasAtencion || "Lun,Mar,Mie,Jue,Vie,Sab,Dom").split(",").map(d => d.trim());
+      document.querySelectorAll("#checkDias input").forEach(chk => {
+        chk.checked = diasActivos.includes(chk.value);
+      });
+      document.getElementById("calHorarios").value = String(neg.datos.HorariosTurnos || "09:00,11:00,15:00,17:00");
+      document.getElementById("calCupo").value = Number(neg.datos.CupoMaximoTurno || 10);
     }
 
     function cambiarMiNegocio() {
+      sincronizarInputsCalendarioNegocioActivo();
       renderizarReservasPrestador();
       renderizarChatPrestador();
     }
@@ -545,6 +580,7 @@
         horariosTurnos: horarios,
         cupoMaximoTurno: cupo
       });
+      await cargarNegociosYReservasDesdeSheets();
       alert("✅ Disponibilidad y cupos actualizados en Google Sheets.");
     }
 
@@ -553,22 +589,59 @@
       mostrarTab("tabChat");
     }
 
+    function seleccionarClienteChat(idCliente, nombreCliente, idReserva) {
+      clienteActivoChat = { idCliente, nombreCliente, idReserva };
+      renderizarChatPrestador();
+    }
+
     function renderizarChatPrestador() {
       const neg = obtenerNegocioActual();
       if (!neg) return;
 
-      document.getElementById("listaClientesChat").innerHTML = `
-        <button class="w-full text-left p-3 rounded-xl bg-indigo-50 border border-indigo-200 font-bold text-indigo-950">
-          👤 ${clienteActivoChat.nombreCliente} (${clienteActivoChat.idReserva})
-        </button>
-      `;
+      // Construir lista única de clientes que tienen reservas o mensajes con este negocio
+      const mapaClientes = {};
+      misReservasServidor.filter(r => String(r.IDPrestador) === String(neg.id)).forEach(r => {
+        mapaClientes[r.IDCliente] = { idCliente: r.IDCliente, nombreCliente: r.NombreCliente, idReserva: r.IDReserva };
+      });
+      misMensajesServidor.filter(m => String(m.IDPrestador) === String(neg.id)).forEach(m => {
+        if (!mapaClientes[m.IDCliente]) {
+          mapaClientes[m.IDCliente] = { idCliente: m.IDCliente, nombreCliente: m.NombreCliente, idReserva: m.IDReserva || "RES-GEN" };
+        }
+      });
+
+      const listaClientes = Object.values(mapaClientes);
+      if (!clienteActivoChat && listaClientes.length > 0) {
+        clienteActivoChat = listaClientes[0];
+      }
+
+      const contClientes = document.getElementById("listaClientesChat");
+      if (listaClientes.length === 0) {
+        contClientes.innerHTML = `<p class="text-slate-400">Sin clientes con reservas o mensajes aún.</p>`;
+        document.getElementById("mensajesPrestadorBox").innerHTML = `<p class="text-slate-400 text-center my-8">Cuando un cliente te escriba o reserve, aparecerá aquí.</p>`;
+        return;
+      }
+
+      contClientes.innerHTML = listaClientes.map(c => {
+        const activo = clienteActivoChat && String(clienteActivoChat.idCliente) === String(c.idCliente);
+        return `
+          <button onclick="seleccionarClienteChat('${c.idCliente}', '${c.nombreCliente}', '${c.idReserva}')"
+            class="w-full text-left p-3 rounded-xl border font-bold transition ${activo ? 'bg-indigo-700 text-white border-indigo-700' : 'bg-indigo-50 text-indigo-950 border-indigo-200'}">
+            👤 ${c.nombreCliente} (${c.idReserva})
+          </button>
+        `;
+      }).join("");
+
+      if (!clienteActivoChat) return;
 
       document.getElementById("tituloChatPrestador").textContent = `Chat con ${clienteActivoChat.nombreCliente} · ${neg.nombre}`;
-      const conv = misMensajesServidor.filter(m => String(m.IDPrestador) === String(neg.id));
+      const conv = misMensajesServidor.filter(m =>
+        String(m.IDPrestador) === String(neg.id) &&
+        String(m.IDCliente) === String(clienteActivoChat.idCliente)
+      );
       const box = document.getElementById("mensajesPrestadorBox");
 
       if (conv.length === 0) {
-        box.innerHTML = `<p class="text-slate-400 text-center my-8">Aún no hay mensajes en este negocio.</p>`;
+        box.innerHTML = `<p class="text-slate-400 text-center my-8">Aún no hay mensajes con ${clienteActivoChat.nombreCliente}. Escribile abajo para iniciar el chat.</p>`;
         return;
       }
 
@@ -589,7 +662,7 @@
     async function enviarMensajeDesdePrestador(e) {
       e.preventDefault();
       const neg = obtenerNegocioActual();
-      if (!neg) return;
+      if (!neg || !clienteActivoChat) return;
       const input = document.getElementById("inputChatPrestador");
       const texto = input.value.trim();
       if (!texto) return;
@@ -610,8 +683,8 @@
     }
 
     function initMapaPrestador() {
-      const lat = parseFloat(document.getElementById("negLat").value);
-      const lng = parseFloat(document.getElementById("negLng").value);
+      const lat = parseCoord(document.getElementById("negLat").value, -24.6961);
+      const lng = parseCoord(document.getElementById("negLng").value, -65.0933);
       mapPin = L.map("mapaPrestadorPin").setView([lat, lng], 14);
       L.tileLayer("https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}", { maxZoom: 20 }).addTo(mapPin);
       markerNegocio = L.marker([lat, lng], { draggable: true }).addTo(mapPin);
@@ -627,9 +700,9 @@
     }
 
     function actualizarInputsCoords(lat, lng) {
-      document.getElementById("negLat").value = lat.toFixed(6);
-      document.getElementById("negLng").value = lng.toFixed(6);
-      document.getElementById("estadoGPS").textContent = `✅ Pin fijado: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      document.getElementById("negLat").value = Number(lat).toFixed(6);
+      document.getElementById("negLng").value = Number(lng).toFixed(6);
+      document.getElementById("estadoGPS").textContent = `✅ Pin fijado: ${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`;
     }
 
     function centrarMapaEnLocalidad() {
@@ -663,8 +736,8 @@
       const nombre = document.getElementById("negNombre").value;
       const rubro = document.getElementById("negRubro").value;
       const localidad = document.getElementById("negLocalidad").value;
-      const lat = parseFloat(document.getElementById("negLat").value);
-      const lng = parseFloat(document.getElementById("negLng").value);
+      const lat = parseCoord(document.getElementById("negLat").value, -24.6961);
+      const lng = parseCoord(document.getElementById("negLng").value, -65.0933);
       const costo = Number(document.getElementById("negCosto").value);
 
       const res = await llamarBackend({

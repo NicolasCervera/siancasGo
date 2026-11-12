@@ -122,10 +122,15 @@
   </main>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxq6VfxTusE_D2pERfzsEnOrdE6c9RV4ZyPmeLODftAeDLNmoQSv5qitJ4R9pjntvbT/exec";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
+    }
+
+    function parseCoord(v, def) {
+      const n = parseFloat(String(v !== undefined && v !== null ? v : "").replace(",", "."));
+      return isFinite(n) ? n : def;
     }
 
     async function llamarBackend(payload) {
@@ -198,6 +203,12 @@
       const nombre = document.getElementById("aRegNombre").value.trim();
       const wa = normalizarWA(document.getElementById("aRegWA").value);
       const pass = document.getElementById("aRegPass").value.trim();
+
+      if (wa.length < 6) {
+        mostrarErrorA("⚠️ Ingresá un número de WhatsApp válido.");
+        return;
+      }
+
       const btn = document.getElementById("btnSubmitRegA");
       btn.disabled = true;
       btn.textContent = "Guardando en Sheets...";
@@ -272,7 +283,11 @@
 
     async function sincronizarPanelAdminConSheets() {
       const res = await llamarBackend({ action: "listarAdmin" });
-      if (!res.ok) return;
+      if (!res.ok) {
+        document.getElementById("tablaNegocios").innerHTML =
+          `<div class="p-3 bg-rose-950 text-rose-200 rounded-xl">⚠️ ${res.error || "Error al consultar Google Sheets."}</div>`;
+        return;
+      }
 
       prestadoresServidor = res.prestadores || [];
       reservasServidor = res.reservas || [];
@@ -280,12 +295,14 @@
       if (mapMarkersGroup) {
         mapMarkersGroup.clearLayers();
         prestadoresServidor.forEach(p => {
-          const m = L.marker([Number(p.Latitud || -24.6672), Number(p.Longitud || -65.0485)]).addTo(mapMarkersGroup);
+          const lat = parseCoord(p.Latitud, -24.6672);
+          const lng = parseCoord(p.Longitud, -65.0485);
+          const m = L.marker([lat, lng]).addTo(mapMarkersGroup);
           m.bindPopup(`<strong>${p.NombreNegocio}</strong><br>${p.Localidad} (${p.Rubro})`);
         });
       }
 
-      if (prestadoresServidor.length > 0 && !prestadoresServidor.some(p => p.ID === idPrestadorSeleccionado)) {
+      if (prestadoresServidor.length > 0 && !prestadoresServidor.some(p => String(p.ID) === String(idPrestadorSeleccionado))) {
         idPrestadorSeleccionado = prestadoresServidor[0].ID;
       }
 
@@ -331,7 +348,7 @@
       if (!p) return;
 
       if (adminMap) {
-        adminMap.setView([Number(p.Latitud || -24.6672), Number(p.Longitud || -65.0485)], 14);
+        adminMap.setView([parseCoord(p.Latitud, -24.6672), parseCoord(p.Longitud, -65.0485)], 14);
       }
 
       const reservasDelPrestador = reservasServidor.filter(r => String(r.IDPrestador) === String(idPrestador));

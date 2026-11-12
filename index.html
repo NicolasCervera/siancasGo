@@ -203,7 +203,7 @@
         </div>
       </form>
 
-      <!-- Crear Cuenta: SOLO Nombre Completo, WhatsApp y Contraseña (Guarda en hoja 'Usuarios') -->
+      <!-- Crear Cuenta: SOLO Nombre Completo, WhatsApp y Contraseña -->
       <form id="formRegistro" onsubmit="ejecutarRegistroCliente(event)" class="hidden space-y-3 text-xs">
         <div>
           <label class="font-bold block mb-1">Nombre Completo</label>
@@ -255,11 +255,16 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxdbvHLJDDrjeRJ5qeTuGp4CYs74mnaRbmw61RcwttbbouaeVMp2g_lVBTOLOYeD_k/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxq6VfxTusE_D2pERfzsEnOrdE6c9RV4ZyPmeLODftAeDLNmoQSv5qitJ4R9pjntvbT/exec";
     let ADMIN_WA = "5493875622260";
 
     function normalizarWA(v) {
       return String(v || "").replace(/[^0-9]/g, "");
+    }
+
+    function parseCoord(v, def) {
+      const n = parseFloat(String(v !== undefined && v !== null ? v : "").replace(",", "."));
+      return isFinite(n) ? n : def;
     }
 
     async function llamarBackend(payload) {
@@ -271,7 +276,6 @@
       return await response.json();
     }
 
-    // Limpiar bases locales viejas para que nunca interfieran con Google Sheets
     localStorage.removeItem("siancas_usuarios_db");
     localStorage.removeItem("siancas_planes_db");
     localStorage.removeItem("siancas_reservas");
@@ -334,12 +338,15 @@
           whatsapp: user.whatsapp
         });
 
-        if (res.ok) {
-          misPlanesServidor = res.planes || [];
-          misReservasServidor = res.reservas || [];
+        if (!res.ok) {
+          cont.innerHTML = `<div class="p-3 text-rose-700 bg-rose-50 rounded-xl">⚠️ ${res.error || "Error al leer hojas de ruta."}</div>`;
+          return;
         }
+
+        misPlanesServidor = res.planes || [];
+        misReservasServidor = res.reservas || [];
       } catch (err) {
-        cont.innerHTML = `<div class="p-3 text-rose-700 bg-rose-50 rounded-xl">⚠️ Error al conectar con Google Sheets. Verificá haber publicado una Nueva Versión en Apps Script.</div>`;
+        cont.innerHTML = `<div class="p-3 text-rose-700 bg-rose-50 rounded-xl">⚠️ Error de conexión con Google Apps Script.</div>`;
         return;
       }
 
@@ -387,15 +394,16 @@
         personas: Number(plan.CantidadPersonas),
         presupuesto: Number(plan.PresupuestoTotal),
         costoAcumulado: Number(plan.CostoEstimado),
-        items: items.map(it => ({
+        items: (items || []).map(it => ({
           ID: it.ID || it.id,
           NombreNegocio: it.NombreNegocio || it.nombre,
           Localidad: it.Localidad || it.localidad,
+          Rubro: it.Rubro || it.rubro || "",
           fecha: it.fecha,
           diaSemana: it.diaSemana || "",
           hora: it.hora,
-          Latitud: Number(it.Latitud || it.lat || -24.6672),
-          Longitud: Number(it.Longitud || it.lng || -65.0485),
+          Latitud: parseCoord(it.Latitud !== undefined ? it.Latitud : it.lat, -24.6672),
+          Longitud: parseCoord(it.Longitud !== undefined ? it.Longitud : it.lng, -65.0485),
           subtotal: Number(it.subtotal || 0)
         })),
         avisosCalendario: [`📂 Mostrando tu hoja de ruta guardada en Google Sheets (${plan.IDPlan}).`]
@@ -403,7 +411,6 @@
       renderizarPlanYMapa();
     }
 
-    // LOGIN Y REGISTRO EN TIEMPO REAL CONTRA LA HOJA 'Usuarios'
     function abrirAuthModal(modo) {
       document.getElementById("authErrorBox").classList.add("hidden");
       document.getElementById("authModal").classList.remove("hidden");
@@ -476,7 +483,7 @@
       const wa = normalizarWA(document.getElementById("regWA").value);
       const pass = document.getElementById("regPass").value.trim();
 
-      if (wa.length < 8) {
+      if (wa.length < 6) {
         mostrarErrorAuth("⚠️ Ingresá un número de WhatsApp válido.");
         return;
       }
@@ -542,7 +549,6 @@
       await sincronizarDatosDelClienteConSheets();
     }
 
-    // GENERAR PLAN EN VIVO CONSULTANDO DISPONIBILIDAD EN GOOGLE SHEETS
     async function generarPlanConCalendario(e) {
       if (e) e.preventDefault();
       const btn = document.getElementById("btnCalcularPlan");
@@ -564,12 +570,14 @@
 
       try {
         const res = await llamarBackend(payload);
-        if (res.ok) {
-          planActual = res;
-          renderizarPlanYMapa();
+        if (!res.ok) {
+          alert("Error en servidor: " + (res.error || "No se pudo calcular el plan."));
+          return;
         }
+        planActual = res;
+        renderizarPlanYMapa();
       } catch (err) {
-        alert("Error al consultar disponibilidad en Google Sheets.");
+        alert("Error de red al consultar disponibilidad en Google Sheets.");
       } finally {
         btn.disabled = false;
         btn.textContent = "🧭 Calcular Disponibilidad y Trazar Pines en Mapa";
@@ -625,7 +633,7 @@
       const coordsRuta = [];
 
       (planActual.items || []).forEach((it, idx) => {
-        const latlng = [Number(it.Latitud), Number(it.Longitud)];
+        const latlng = [parseCoord(it.Latitud, -24.6672), parseCoord(it.Longitud, -65.0485)];
         coordsRuta.push(latlng);
 
         const iconoPin = L.divIcon({
@@ -661,7 +669,7 @@
     function centrarPin(idx) {
       const it = planActual.items[idx];
       if (!it) return;
-      map.setView([Number(it.Latitud), Number(it.Longitud)], 15);
+      map.setView([parseCoord(it.Latitud, -24.6672), parseCoord(it.Longitud, -65.0485)], 15);
     }
 
     async function confirmarYGuardarPlan() {
@@ -684,6 +692,11 @@
           ...planActual
         });
 
+        if (!res.ok) {
+          alert("Error al guardar: " + (res.error || ""));
+          return;
+        }
+
         await sincronizarDatosDelClienteConSheets();
 
         const idPlanCreado = res.idPlan || "PLN-NUEVO";
@@ -705,7 +718,6 @@
       }
     }
 
-    // CHAT CON MEMORIA EN HOJA 'Mensajes'
     async function abrirChatConPrestador(idPrestador, nombreNegocio, idReserva) {
       const user = JSON.parse(localStorage.getItem("siancas_cliente_sesion") || "null");
       if (!user) {
